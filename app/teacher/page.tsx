@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
 
@@ -80,6 +81,12 @@ export default function TeacherPage() {
         <div className="portal-cards">
           <div className="portal-stat-card"><div className="ps-num">{classes.length}</div><div className="ps-label">Classes in the school</div></div>
           <div className="portal-stat-card"><div className="ps-num">{assignments.length}</div><div className="ps-label">Assignments you've posted</div></div>
+        </div>
+
+        <div className="portal-panel">
+          <h2>Take Attendance</h2>
+          <p>Mark attendance for any class, for today or a past date.</p>
+          <Link href="/teacher/attendance" className="btn btn-primary">Mark Attendance</Link>
         </div>
 
         <div className="portal-panel">

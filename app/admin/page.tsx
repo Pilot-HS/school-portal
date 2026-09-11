@@ -14,6 +14,36 @@ export default function AdminPage() {
   const [teachers, setTeachers] = useState<any[]>([]);
   const [fees, setFees] = useState<any[]>([]);
   const [notices, setNotices] = useState<any[]>([]);
+  const [togglingFeeId, setTogglingFeeId] = useState<string | null>(null);
+
+  async function loadAll() {
+    const [{ data: studentData }, { data: teacherData }, { data: feeData }, { data: noticeData }] = await Promise.all([
+      supabase.from("students").select("*, classes(name)").order("full_name"),
+      supabase.from("teachers").select("*"),
+      supabase.from("fees").select("*, students(full_name)"),
+      supabase.from("notices").select("*").order("created_at", { ascending: false }).limit(5),
+    ]);
+    setStudents(studentData || []);
+    setTeachers(teacherData || []);
+    setFees(feeData || []);
+    setNotices(noticeData || []);
+  }
+
+  async function toggleFeeStatus(feeId: string, currentStatus: string) {
+    setTogglingFeeId(feeId);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+    const newStatus = currentStatus === "paid" ? "unpaid" : "paid";
+
+    await fetch("/api/admin/update-fee-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ fee_id: feeId, status: newStatus }),
+    });
+
+    await loadAll();
+    setTogglingFeeId(null);
+  }
 
   useEffect(() => {
     (async () => {
@@ -36,17 +66,7 @@ export default function AdminPage() {
       }
       setFullName(profile.full_name);
 
-      const [{ data: studentData }, { data: teacherData }, { data: feeData }, { data: noticeData }] = await Promise.all([
-        supabase.from("students").select("*, classes(name)").order("full_name"),
-        supabase.from("teachers").select("*"),
-        supabase.from("fees").select("*, students(full_name)"),
-        supabase.from("notices").select("*").order("created_at", { ascending: false }).limit(5),
-      ]);
-      setStudents(studentData || []);
-      setTeachers(teacherData || []);
-      setFees(feeData || []);
-      setNotices(noticeData || []);
-
+      await loadAll();
       setLoading(false);
     })();
   }, [router]);
@@ -117,7 +137,7 @@ export default function AdminPage() {
           <h2>Fee Overview</h2>
           {fees.length === 0 ? <p>No fee records yet.</p> : (
             <table className="data-table">
-              <thead><tr><th>Student</th><th>Charge</th><th>Amount</th><th>Status</th></tr></thead>
+              <thead><tr><th>Student</th><th>Charge</th><th>Amount</th><th>Status</th><th></th></tr></thead>
               <tbody>
                 {fees.map((f) => (
                   <tr key={f.id}>
@@ -125,11 +145,22 @@ export default function AdminPage() {
                     <td>{f.charge_name}</td>
                     <td>PKR {f.amount}</td>
                     <td><span className={`pill ${f.status === "paid" ? "pill-green" : "pill-red"}`}>{f.status}</span></td>
+                    <td>
+                      <button
+                        className="btn btn-outline"
+                        style={{ padding: "4px 10px", fontSize: "0.78rem" }}
+                        disabled={togglingFeeId === f.id}
+                        onClick={() => toggleFeeStatus(f.id, f.status)}
+                      >
+                        {togglingFeeId === f.id ? "…" : f.status === "paid" ? "Mark unpaid" : "Mark paid"}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
+          <Link href="/admin/fees/new" className="btn btn-outline" style={{ marginTop: "16px" }}>Add Fee Record</Link>
         </div>
 
         <div className="portal-panel">
@@ -144,9 +175,7 @@ export default function AdminPage() {
               </tbody>
             </table>
           )}
-          <p style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "14px" }}>
-            Posting notices from this screen is coming in a future update &mdash; for now, use the Supabase Table Editor for those.
-          </p>
+          <Link href="/admin/notices/new" className="btn btn-outline" style={{ marginTop: "16px" }}>Post a Notice</Link>
         </div>
       </div>
     </div>
