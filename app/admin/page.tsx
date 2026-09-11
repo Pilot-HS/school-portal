@@ -76,6 +76,16 @@ export default function AdminPage() {
         </div>
 
         <div className="portal-panel">
+          <h2>Manage Classes, Students &amp; Teachers</h2>
+          <p>Add classes, then add student and teacher records — and link them to logins you've already created.</p>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <Link href="/admin/classes" className="btn btn-outline">Manage Classes</Link>
+            <Link href="/admin/students/new" className="btn btn-outline">Add Student</Link>
+            <Link href="/admin/teachers/new" className="btn btn-outline">Add Teacher</Link>
+          </div>
+        </div>
+
+        <div className="portal-panel">
           <h2>Students</h2>
           {students.length === 0 ? <p>No students added yet.</p> : (
             <table className="data-table">
@@ -135,7 +145,7 @@ export default function AdminPage() {
             </table>
           )}
           <p style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "14px" }}>
-            Adding students, teachers, classes, fees, and notices from this screen is coming in the next update &mdash; for now, use the Supabase Table Editor for those, and the button above for creating logins.
+            Posting notices from this screen is coming in a future update &mdash; for now, use the Supabase Table Editor for those.
           </p>
         </div>
       </div>
