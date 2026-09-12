@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { School, BookOpen } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
 
@@ -79,8 +80,16 @@ export default function TeacherPage() {
         </p>
 
         <div className="portal-cards">
-          <div className="portal-stat-card"><div className="ps-num">{classes.length}</div><div className="ps-label">Classes in the school</div></div>
-          <div className="portal-stat-card"><div className="ps-num">{assignments.length}</div><div className="ps-label">Assignments you've posted</div></div>
+          <div className="icon-stat-card">
+            <div className="icon-badge icon-badge-blue"><School size={18} /></div>
+            <div className="icon-stat-num">{classes.length}</div>
+            <div className="icon-stat-label">Classes in the school</div>
+          </div>
+          <div className="icon-stat-card">
+            <div className="icon-badge icon-badge-amber"><BookOpen size={18} /></div>
+            <div className="icon-stat-num">{assignments.length}</div>
+            <div className="icon-stat-label">Assignments you've posted</div>
+          </div>
         </div>
 
         <div className="portal-panel">

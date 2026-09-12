@@ -11,6 +11,12 @@ export default function StudentsListPage() {
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
   const [students, setStudents] = useState<any[]>([]);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  async function loadStudents() {
+    const { data } = await supabase.from("students").select("*, classes(name)").order("full_name");
+    setStudents(data || []);
+  }
 
   useEffect(() => {
     (async () => {
@@ -30,12 +36,25 @@ export default function StudentsListPage() {
         return;
       }
       setFullName(profile.full_name);
-
-      const { data } = await supabase.from("students").select("*, classes(name)").order("full_name");
-      setStudents(data || []);
+      await loadStudents();
       setLoading(false);
     })();
   }, [router]);
+
+  async function toggleActive(studentId: string, currentActive: boolean) {
+    setTogglingId(studentId);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    await fetch("/api/admin/toggle-student-active", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ student_id: studentId, is_active: !currentActive }),
+    });
+
+    await loadStudents();
+    setTogglingId(null);
+  }
 
   if (loading) return <div className="loading-shell">Loading&hellip;</div>;
 
@@ -49,11 +68,30 @@ export default function StudentsListPage() {
       <div className="portal-panel">
         {students.length === 0 ? <p>No students added yet.</p> : (
           <table className="data-table">
-            <thead><tr><th>Name</th><th>Roll No.</th><th>Class</th></tr></thead>
+            <thead><tr><th>Name</th><th>Roll No.</th><th>Class</th><th>Status</th><th></th></tr></thead>
             <tbody>
-              {students.map((s) => (
-                <tr key={s.id}><td>{s.full_name}</td><td>{s.roll_no}</td><td>{s.classes?.name || "\u2014"}</td></tr>
-              ))}
+              {students.map((s) => {
+                const isActive = s.is_active !== false;
+                return (
+                  <tr key={s.id}>
+                    <td>{s.full_name}</td>
+                    <td>{s.roll_no}</td>
+                    <td>{s.classes?.name || "\u2014"}</td>
+                    <td><span className={`pill ${isActive ? "pill-green" : "pill-red"}`}>{isActive ? "Active" : "Inactive"}</span></td>
+                    <td style={{ display: "flex", gap: "6px" }}>
+                      <Link href={`/admin/students/${s.id}/edit`} className="btn btn-outline" style={{ padding: "4px 10px", fontSize: "0.78rem" }}>Edit</Link>
+                      <button
+                        className="btn btn-outline"
+                        style={{ padding: "4px 10px", fontSize: "0.78rem" }}
+                        disabled={togglingId === s.id}
+                        onClick={() => toggleActive(s.id, isActive)}
+                      >
+                        {togglingId === s.id ? "…" : isActive ? "Deactivate" : "Activate"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

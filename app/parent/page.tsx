@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CalendarCheck, Award, Wallet } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
 
@@ -106,6 +107,24 @@ export default function ParentPage() {
             <p style={{ color: "var(--muted)", marginBottom: "24px" }}>
               Viewing: <strong>{selectedChild?.full_name}</strong> &middot; {selectedChild?.classes?.name || "No class assigned"} &middot; Roll No. {selectedChild?.roll_no}
             </p>
+
+            <div className="portal-cards">
+              <div className="icon-stat-card">
+                <div className="icon-badge icon-badge-green"><CalendarCheck size={18} /></div>
+                <div className="icon-stat-num">{attendance.filter((a) => a.status === "present").length}/{attendance.length}</div>
+                <div className="icon-stat-label">Days present (recent)</div>
+              </div>
+              <div className="icon-stat-card">
+                <div className="icon-badge icon-badge-blue"><Award size={18} /></div>
+                <div className="icon-stat-num">{results.length}</div>
+                <div className="icon-stat-label">Recorded exam results</div>
+              </div>
+              <div className="icon-stat-card">
+                <div className="icon-badge icon-badge-red"><Wallet size={18} /></div>
+                <div className="icon-stat-num">{fees.filter((f) => f.status === "unpaid").length}</div>
+                <div className="icon-stat-label">Unpaid charges</div>
+              </div>
+            </div>
 
             <div className="portal-panel">
               <h2>Recent Attendance</h2>

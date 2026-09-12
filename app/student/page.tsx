@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CalendarCheck, BookOpen, Award, Wallet } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
 
@@ -88,10 +89,26 @@ export default function StudentPage() {
             </p>
 
             <div className="portal-cards">
-              <div className="portal-stat-card"><div className="ps-num">{attendance.length}</div><div className="ps-label">Recent attendance records</div></div>
-              <div className="portal-stat-card"><div className="ps-num">{assignments.length}</div><div className="ps-label">Assignments for your class</div></div>
-              <div className="portal-stat-card"><div className="ps-num">{results.length}</div><div className="ps-label">Recorded exam results</div></div>
-              <div className="portal-stat-card"><div className="ps-num">{fees.filter((f) => f.status === "unpaid").length}</div><div className="ps-label">Unpaid charges</div></div>
+              <div className="icon-stat-card">
+                <div className="icon-badge icon-badge-green"><CalendarCheck size={18} /></div>
+                <div className="icon-stat-num">{attendance.length}</div>
+                <div className="icon-stat-label">Recent attendance records</div>
+              </div>
+              <div className="icon-stat-card">
+                <div className="icon-badge icon-badge-amber"><BookOpen size={18} /></div>
+                <div className="icon-stat-num">{assignments.length}</div>
+                <div className="icon-stat-label">Assignments for your class</div>
+              </div>
+              <div className="icon-stat-card">
+                <div className="icon-badge icon-badge-blue"><Award size={18} /></div>
+                <div className="icon-stat-num">{results.length}</div>
+                <div className="icon-stat-label">Recorded exam results</div>
+              </div>
+              <div className="icon-stat-card">
+                <div className="icon-badge icon-badge-red"><Wallet size={18} /></div>
+                <div className="icon-stat-num">{fees.filter((f) => f.status === "unpaid").length}</div>
+                <div className="icon-stat-label">Unpaid charges</div>
+              </div>
             </div>
 
             <div className="portal-panel">
