@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import PortalNav from "@/components/PortalNav";
+import AdminLayout from "@/components/AdminLayout";
 
 export default function NewNoticePage() {
   const router = useRouter();
@@ -68,10 +68,7 @@ export default function NewNoticePage() {
   if (loading) return <div className="loading-shell">Loading&hellip;</div>;
 
   return (
-    <div>
-      <PortalNav role="admin" fullName={fullName} />
-      <div className="portal-main">
-        <Link href="/admin" style={{ fontSize: "0.85rem", color: "var(--accent-2)" }}>&larr; Back to Dashboard</Link>
+      <AdminLayout active="notices" fullName={fullName}>
         <h1 style={{ fontSize: "1.4rem", marginTop: "10px" }}>Post a Notice</h1>
 
         <div className="portal-panel" style={{ maxWidth: "520px" }}>
@@ -105,7 +102,6 @@ export default function NewNoticePage() {
             {message && <p className={message.type === "success" ? "success-text" : "error-text"}>{message.text}</p>}
           </form>
         </div>
-      </div>
-    </div>
+      </AdminLayout>
   );
 }

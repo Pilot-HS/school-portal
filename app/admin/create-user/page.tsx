@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import PortalNav from "@/components/PortalNav";
+import AdminLayout from "@/components/AdminLayout";
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -79,10 +79,7 @@ export default function CreateUserPage() {
   if (loading) return <div className="loading-shell">Loading&hellip;</div>;
 
   return (
-    <div>
-      <PortalNav role="admin" fullName={fullName} />
-      <div className="portal-main">
-        <Link href="/admin" style={{ fontSize: "0.85rem", color: "var(--accent-2)" }}>&larr; Back to Dashboard</Link>
+      <AdminLayout active="accounts" fullName={fullName}>
         <h1 style={{ fontSize: "1.4rem", marginTop: "10px" }}>Create New Account</h1>
         <p style={{ color: "var(--muted)", marginBottom: "24px" }}>
           This creates a real login. After creating a student or teacher account, link it to a student/teacher record via the Supabase Table Editor (set the profile_id column).
@@ -119,7 +116,6 @@ export default function CreateUserPage() {
             )}
           </form>
         </div>
-      </div>
-    </div>
+      </AdminLayout>
   );
 }

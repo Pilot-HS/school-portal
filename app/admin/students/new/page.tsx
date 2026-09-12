@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import PortalNav from "@/components/PortalNav";
+import AdminLayout from "@/components/AdminLayout";
 
 export default function NewStudentPage() {
   const router = useRouter();
@@ -100,10 +100,7 @@ export default function NewStudentPage() {
   if (loading) return <div className="loading-shell">Loading&hellip;</div>;
 
   return (
-    <div>
-      <PortalNav role="admin" fullName={fullName} />
-      <div className="portal-main">
-        <Link href="/admin" style={{ fontSize: "0.85rem", color: "var(--accent-2)" }}>&larr; Back to Dashboard</Link>
+      <AdminLayout active="students" fullName={fullName}>
         <h1 style={{ fontSize: "1.4rem", marginTop: "10px" }}>Add a Student</h1>
 
         {classes.length === 0 && (
@@ -161,7 +158,6 @@ export default function NewStudentPage() {
         <p style={{ fontSize: "0.82rem", color: "var(--muted)", maxWidth: "480px" }}>
           Tip: create the student's (and parent's) login first from <Link href="/admin/create-user" style={{ color: "var(--accent-2)" }}>Create New Account</Link>, then come back here to link them — or add the student first and link the login later by editing this record.
         </p>
-      </div>
-    </div>
+      </AdminLayout>
   );
 }
