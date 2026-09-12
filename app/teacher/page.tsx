@@ -90,6 +90,15 @@ export default function TeacherPage() {
         </div>
 
         <div className="portal-panel">
+          <h2>Assignments &amp; Exams</h2>
+          <p>Post homework for a class, or enter exam marks for a whole class at once.</p>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <Link href="/teacher/assignments/new" className="btn btn-outline">Post Assignment</Link>
+            <Link href="/teacher/exams/new" className="btn btn-outline">Enter Exam Results</Link>
+          </div>
+        </div>
+
+        <div className="portal-panel">
           <h2>Classes</h2>
           {classes.length === 0 ? <p>No classes set up yet &mdash; ask the admin to add them.</p> : (
             <table className="data-table">
@@ -115,9 +124,7 @@ export default function TeacherPage() {
               </tbody>
             </table>
           )}
-          <p style={{ fontSize: "0.82rem", color: "var(--muted)", marginTop: "14px" }}>
-            Posting new assignments and marking attendance from this screen is coming in the next update &mdash; for now, the admin can add these directly via the Supabase Table Editor.
-          </p>
+
         </div>
 
         <div className="portal-panel">
