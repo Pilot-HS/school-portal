@@ -14,6 +14,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Grade and section are required" }, { status: 400 });
   }
 
+  const { data: existing } = await supabaseAdmin
+    .from("classes")
+    .select("id")
+    .eq("grade", grade)
+    .eq("section", section)
+    .maybeSingle();
+
+  if (existing) {
+    return NextResponse.json({ error: `Class ${grade}-${section} already exists.` }, { status: 400 });
+  }
+
   const { data, error } = await supabaseAdmin
     .from("classes")
     .insert({ grade, section })

@@ -14,6 +14,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Name, roll number, and class are required" }, { status: 400 });
   }
 
+  const { data: existing } = await supabaseAdmin
+    .from("students")
+    .select("id, full_name")
+    .eq("class_id", class_id)
+    .eq("roll_no", roll_no)
+    .maybeSingle();
+
+  if (existing) {
+    return NextResponse.json(
+      { error: `Roll number ${roll_no} is already used by ${existing.full_name} in this class. Choose a different roll number.` },
+      { status: 400 }
+    );
+  }
+
   const { data, error } = await supabaseAdmin
     .from("students")
     .insert({

@@ -15,6 +15,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Subject, exam name, total marks, and at least one student are required" }, { status: 400 });
   }
 
+  if (Number(total_marks) <= 0) {
+    return NextResponse.json({ error: "Total marks must be a positive number" }, { status: 400 });
+  }
+
+  const invalidRecord = records.find(
+    (r: any) => r.marks_obtained === null || r.marks_obtained === undefined || Number(r.marks_obtained) < 0 || Number(r.marks_obtained) > Number(total_marks)
+  );
+  if (invalidRecord) {
+    return NextResponse.json(
+      { error: `One or more marks are invalid — each score must be between 0 and ${total_marks}.` },
+      { status: 400 }
+    );
+  }
+
   const studentIds = records.map((r: any) => r.student_id);
 
   // Replace any existing result for this exact exam + subject for these students,

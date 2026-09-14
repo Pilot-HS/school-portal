@@ -14,6 +14,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Student, charge name, and amount are required" }, { status: 400 });
   }
 
+  if (Number(amount) <= 0) {
+    return NextResponse.json({ error: "Amount must be a positive number" }, { status: 400 });
+  }
+
   const { data, error } = await supabaseAdmin
     .from("fees")
     .insert({

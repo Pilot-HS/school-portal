@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
@@ -76,6 +77,9 @@ export default function LoginPage() {
             {loading ? "Signing in…" : "Log In"}
           </button>
           {error && <p className="error-text">{error}</p>}
+          <p style={{ fontSize: "0.8rem", marginTop: "14px" }}>
+            <Link href="/forgot-password" style={{ color: "var(--accent-2)" }}>Forgot your password?</Link>
+          </p>
         </form>
         <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "20px" }}>
           Don't have an account? Ask the school office &mdash; accounts are created by the admin, not self-registered.
