@@ -157,3 +157,21 @@ table.data-table th { color: var(--muted); font-weight: 600; font-size: 0.75rem;
   .admin-sidebar a.active { border-left: none; border-bottom-color: var(--accent); }
   .chart-row { grid-template-columns: 1fr; }
 }
+
+/* Print styles for Reports — hides nav/chrome, keeps only the report */
+@media print {
+  .topnav, .demo-banner, .admin-sidebar, .no-print {
+    display: none !important;
+  }
+  .admin-content {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .portal-panel {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+}
