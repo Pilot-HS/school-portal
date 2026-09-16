@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import AdminLayout from "@/components/AdminLayout";
-
-const STATUS_OPTIONS = ["new", "under_review", "approved", "rejected", "enrolled"];
 
 const STATUS_LABELS: Record<string, string> = {
   new: "New",
@@ -27,13 +26,7 @@ export default function AdmissionsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
-  const [admissions, setAdmissions] = useState<any[]>([]);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
-
-  async function loadAdmissions() {
-    const { data } = await supabase.from("admissions").select("*").order("created_at", { ascending: false });
-    setAdmissions(data || []);
-  }
+  const [applications, setApplications] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -53,41 +46,34 @@ export default function AdmissionsPage() {
         return;
       }
       setFullName(profile.full_name);
-      await loadAdmissions();
+
+      const { data } = await supabase
+        .from("admission_applications")
+        .select("*")
+        .order("created_at", { ascending: false });
+      setApplications(data || []);
       setLoading(false);
     })();
   }, [router]);
 
-  async function updateStatus(admissionId: string, status: string) {
-    setUpdatingId(admissionId);
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
-
-    await fetch("/api/admin/update-admission-status", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ admission_id: admissionId, status }),
-    });
-
-    await loadAdmissions();
-    setUpdatingId(null);
-  }
-
   if (loading) return <div className="loading-shell">Loading&hellip;</div>;
 
-  const newCount = admissions.filter((a) => a.status === "new").length;
+  const newCount = applications.filter((a) => a.status === "new").length;
 
   return (
     <AdminLayout active="admissions" fullName={fullName}>
-      <h1 style={{ fontSize: "1.4rem", marginBottom: "4px" }}>Admissions</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+        <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Admissions</h1>
+        <Link href="/admin/admissions/new" className="btn btn-primary">Add Application</Link>
+      </div>
       <p style={{ color: "var(--muted)", marginBottom: "20px" }}>
-        Inquiries submitted through the public website's admissions form appear here automatically.
+        Applications submitted through the public website, or entered here by office staff for walk-in families.
       </p>
 
       <div className="portal-cards" style={{ gridTemplateColumns: "repeat(2, 1fr)", maxWidth: "420px" }}>
         <div className="icon-stat-card">
-          <div className="icon-stat-num">{admissions.length}</div>
-          <div className="icon-stat-label">Total inquiries</div>
+          <div className="icon-stat-num">{applications.length}</div>
+          <div className="icon-stat-label">Total applications</div>
         </div>
         <div className="icon-stat-card">
           <div className="icon-stat-num">{newCount}</div>
@@ -96,32 +82,21 @@ export default function AdmissionsPage() {
       </div>
 
       <div className="portal-panel">
-        {admissions.length === 0 ? (
-          <p>No admission inquiries yet. Once someone submits the form on the public website, it will appear here.</p>
+        {applications.length === 0 ? (
+          <p>No applications yet.</p>
         ) : (
           <table className="data-table">
-            <thead><tr><th>Date</th><th>Student</th><th>Parent</th><th>Phone</th><th>Grade</th><th>Status</th></tr></thead>
+            <thead><tr><th>Date</th><th>Student</th><th>Father's Name</th><th>Class Applying</th><th>Contact</th><th>Status</th><th></th></tr></thead>
             <tbody>
-              {admissions.map((a) => (
+              {applications.map((a) => (
                 <tr key={a.id}>
                   <td>{new Date(a.created_at).toLocaleDateString()}</td>
-                  <td>{a.student_name}</td>
-                  <td>{a.parent_name}</td>
-                  <td>{a.phone}</td>
-                  <td>{a.grade_applying || "\u2014"}</td>
-                  <td>
-                    <select
-                      value={a.status}
-                      disabled={updatingId === a.id}
-                      onChange={(e) => updateStatus(a.id, e.target.value)}
-                      style={{ width: "auto", padding: "5px 8px", fontSize: "0.82rem" }}
-                    >
-                      {STATUS_OPTIONS.map((s) => (
-                        <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                      ))}
-                    </select>
-                    <span className={`pill ${STATUS_PILL[a.status]}`} style={{ marginLeft: "8px" }}>{STATUS_LABELS[a.status]}</span>
-                  </td>
+                  <td>{a.student_full_name}</td>
+                  <td>{a.father_name || "\u2014"}</td>
+                  <td>{a.class_applying_for || "\u2014"}</td>
+                  <td>{a.parent_contact}</td>
+                  <td><span className={`pill ${STATUS_PILL[a.status]}`}>{STATUS_LABELS[a.status]}</span></td>
+                  <td><Link href={`/admin/admissions/${a.id}`} className="btn btn-outline" style={{ padding: "4px 10px", fontSize: "0.78rem" }}>View</Link></td>
                 </tr>
               ))}
             </tbody>
