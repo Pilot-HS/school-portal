@@ -6,6 +6,7 @@ import Link from "next/link";
 import { School, BookOpen } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
+import TimetableGrid from "@/components/TimetableGrid";
 
 export default function TeacherPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function TeacherPage() {
   const [fullName, setFullName] = useState("");
   const [teacher, setTeacher] = useState<any>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
+  const [timetable, setTimetable] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [notices, setNotices] = useState<any[]>([]);
 
@@ -48,12 +50,12 @@ export default function TeacherPage() {
       setClasses(classData || []);
 
       if (teacherRow) {
-        const { data: asg } = await supabase
-          .from("assignments")
-          .select("*, classes(name)")
-          .eq("created_by", teacherRow.id)
-          .order("due_date", { ascending: false });
+        const [{ data: asg }, { data: tt }] = await Promise.all([
+          supabase.from("assignments").select("*, classes(name)").eq("created_by", teacherRow.id).order("due_date", { ascending: false }),
+          supabase.from("timetable_entries").select("*, classes(name)").eq("teacher_id", teacherRow.id),
+        ]);
         setAssignments(asg || []);
+        setTimetable(tt || []);
       }
 
       const { data: noticesData } = await supabase
@@ -105,6 +107,11 @@ export default function TeacherPage() {
             <Link href="/teacher/assignments/new" className="btn btn-outline">Post Assignment</Link>
             <Link href="/teacher/exams/new" className="btn btn-outline">Enter Exam Results</Link>
           </div>
+        </div>
+
+        <div className="portal-panel">
+          <h2>Your Weekly Timetable</h2>
+          <TimetableGrid entries={timetable} showTeacher={false} showClass />
         </div>
 
         <div className="portal-panel">

@@ -14,8 +14,10 @@ export default function NewAdmissionApplicationPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
+  const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [confirmation, setConfirmation] = useState<{ referenceId: string; studentName: string; classApplying: string; academicYear: string; date: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -35,6 +37,10 @@ export default function NewAdmissionApplicationPage() {
         return;
       }
       setFullName(profile.full_name);
+
+      const { data: years } = await supabase.from("academic_years").select("*").order("label", { ascending: false });
+      setAcademicYears(years || []);
+
       setLoading(false);
     })();
   }, [router]);
@@ -62,7 +68,13 @@ export default function NewAdmissionApplicationPage() {
     if (!res.ok) {
       setMessage({ type: "error", text: result.error || "Something went wrong." });
     } else {
-      setMessage({ type: "success", text: "Application saved." });
+      setConfirmation({
+        referenceId: result.reference_id,
+        studentName: formData.get("student_full_name") as string,
+        classApplying: formData.get("class_applying_for") as string,
+        academicYear: academicYears.find((y) => y.id === formData.get("academic_year_id"))?.label || "",
+        date: new Date().toLocaleDateString(),
+      });
       form.reset();
     }
     setSubmitting(false);
@@ -70,10 +82,45 @@ export default function NewAdmissionApplicationPage() {
 
   if (loading) return <div className="loading-shell">Loading&hellip;</div>;
 
+  if (confirmation) {
+    return (
+      <AdminLayout active="admissions" fullName={fullName}>
+        <div className="portal-panel" style={{ maxWidth: "520px" }}>
+          <button className="btn btn-primary no-print" style={{ marginBottom: "16px" }} onClick={() => window.print()}>
+            Print / Save as PDF
+          </button>
+          <div style={{ borderBottom: "2px solid var(--ink)", paddingBottom: "12px", marginBottom: "16px" }}>
+            <h2 style={{ margin: 0 }}>Government Boys High School, P.H. Pilot, Dadu</h2>
+            <p style={{ margin: "4px 0 0", color: "var(--muted)" }}>Application Confirmation</p>
+          </div>
+          <table className="data-table">
+            <tbody>
+              <tr><th>Reference ID</th><td style={{ fontWeight: 700 }}>{confirmation.referenceId}</td></tr>
+              <tr><th>Student Name</th><td>{confirmation.studentName}</td></tr>
+              <tr><th>Class Applying For</th><td>{confirmation.classApplying}</td></tr>
+              <tr><th>Academic Year</th><td>{confirmation.academicYear}</td></tr>
+              <tr><th>Date Submitted</th><td>{confirmation.date}</td></tr>
+            </tbody>
+          </table>
+          <p className="form-note mt-32">Keep this reference ID for any future inquiries about this application.</p>
+          <button className="btn btn-outline no-print mt-32" onClick={() => setConfirmation(null)}>Add Another Application</button>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout active="admissions" fullName={fullName}>
       <Link href="/admin/admissions" style={{ fontSize: "0.85rem", color: "var(--accent-2)" }}>&larr; Back to Admissions</Link>
       <h1 style={{ fontSize: "1.4rem", marginTop: "10px", marginBottom: "20px" }}>New Admission Application</h1>
+
+      {academicYears.length === 0 && (
+        <div className="portal-panel" style={{ borderColor: "#c9992e", maxWidth: "760px" }}>
+          <p style={{ margin: 0 }}>
+            No academic years exist yet. <Link href="/admin/academic-years" style={{ color: "var(--accent-2)", fontWeight: 600 }}>Add one first</Link>, then come back here.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         {/* SECTION 1 — STUDENT DETAILS */}
@@ -203,6 +250,15 @@ export default function NewAdmissionApplicationPage() {
               <select id="class_applying_for" name="class_applying_for" required>
                 <option value="">Select&hellip;</option>
                 {CLASSES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="form-field">
+              <label htmlFor="academic_year_id">Academic year *</label>
+              <select id="academic_year_id" name="academic_year_id" required defaultValue={academicYears.find((y) => y.is_current)?.id || ""}>
+                <option value="">Select&hellip;</option>
+                {academicYears.map((y) => (
+                  <option key={y.id} value={y.id}>{y.label}{y.is_current ? " (Current)" : ""}</option>
+                ))}
               </select>
             </div>
           </div>

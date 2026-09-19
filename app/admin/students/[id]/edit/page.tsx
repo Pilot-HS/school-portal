@@ -14,14 +14,12 @@ export default function EditStudentPage() {
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
   const [classes, setClasses] = useState<any[]>([]);
+  const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [studentLogins, setStudentLogins] = useState<any[]>([]);
   const [parentLogins, setParentLogins] = useState<any[]>([]);
+  const [student, setStudent] = useState<any>(null);
+  const [photoUrl, setPhotoUrl] = useState("");
 
-  const [studentName, setStudentName] = useState("");
-  const [rollNo, setRollNo] = useState("");
-  const [classId, setClassId] = useState("");
-  const [profileId, setProfileId] = useState("");
-  const [parentProfileId, setParentProfileId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -44,46 +42,50 @@ export default function EditStudentPage() {
       }
       setFullName(profile.full_name);
 
-      const [{ data: studentRow }, { data: classData }, { data: studentProfiles }, { data: parentProfiles }] = await Promise.all([
+      const [{ data: studentRow }, { data: classData }, { data: studentProfiles }, { data: parentProfiles }, { data: years }] = await Promise.all([
         supabase.from("students").select("*").eq("id", studentId).single(),
         supabase.from("classes").select("*").order("grade"),
         supabase.from("profiles").select("id, full_name").eq("role", "student"),
         supabase.from("profiles").select("id, full_name").eq("role", "parent"),
+        supabase.from("academic_years").select("*").order("label", { ascending: false }),
       ]);
 
       if (studentRow) {
-        setStudentName(studentRow.full_name);
-        setRollNo(studentRow.roll_no);
-        setClassId(studentRow.class_id || "");
-        setProfileId(studentRow.profile_id || "");
-        setParentProfileId(studentRow.parent_profile_id || "");
+        setStudent(studentRow);
+        if (studentRow.photo_path) {
+          const token = session.access_token;
+          const res = await fetch("/api/admin/get-signed-url", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ path: studentRow.photo_path }),
+          });
+          const result = await res.json();
+          if (res.ok) setPhotoUrl(result.url);
+        }
       }
       setClasses(classData || []);
+      setAcademicYears(years || []);
       setStudentLogins(studentProfiles || []);
       setParentLogins(parentProfiles || []);
       setLoading(false);
     })();
   }, [router, studentId]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitting(true);
     setMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+    formData.set("student_id", studentId);
 
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
 
     const res = await fetch("/api/admin/update-student", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        student_id: studentId,
-        full_name: studentName,
-        roll_no: rollNo,
-        class_id: classId,
-        profile_id: profileId || null,
-        parent_profile_id: parentProfileId || null,
-      }),
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     });
     const result = await res.json();
 
@@ -96,6 +98,7 @@ export default function EditStudentPage() {
   }
 
   if (loading) return <div className="loading-shell">Loading&hellip;</div>;
+  if (!student) return <AdminLayout active="students" fullName={fullName}><p>Student not found.</p></AdminLayout>;
 
   return (
     <AdminLayout active="students" fullName={fullName}>
@@ -104,17 +107,34 @@ export default function EditStudentPage() {
 
       <div className="portal-panel" style={{ maxWidth: "480px" }}>
         <form onSubmit={handleSubmit}>
+          {photoUrl && (
+            <div className="form-field">
+              <img src={photoUrl} alt={student.full_name} style={{ width: "100px", height: "100px", objectFit: "cover", border: "1px solid var(--border)" }} />
+            </div>
+          )}
           <div className="form-field">
-            <label htmlFor="student_name">Student's full name</label>
-            <input id="student_name" required value={studentName} onChange={(e) => setStudentName(e.target.value)} />
+            <label htmlFor="full_name">Student's full name</label>
+            <input id="full_name" name="full_name" required defaultValue={student.full_name} />
           </div>
           <div className="form-field">
             <label htmlFor="roll_no">Roll number</label>
-            <input id="roll_no" required value={rollNo} onChange={(e) => setRollNo(e.target.value)} />
+            <input id="roll_no" name="roll_no" required defaultValue={student.roll_no} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="gr_number">GR Number</label>
+            <input id="gr_number" name="gr_number" defaultValue={student.gr_number || ""} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="date_of_birth">Date of birth</label>
+            <input id="date_of_birth" name="date_of_birth" type="date" defaultValue={student.date_of_birth || ""} />
+          </div>
+          <div className="form-field">
+            <label htmlFor="photo">Replace photograph (optional)</label>
+            <input id="photo" name="photo" type="file" accept="image/jpeg,image/png" />
           </div>
           <div className="form-field">
             <label htmlFor="class_id">Class</label>
-            <select id="class_id" required value={classId} onChange={(e) => setClassId(e.target.value)}>
+            <select id="class_id" name="class_id" required defaultValue={student.class_id || ""}>
               <option value="">Select a class&hellip;</option>
               {classes.map((c) => (
                 <option key={c.id} value={c.id}>{c.grade}-{c.section}</option>
@@ -122,8 +142,17 @@ export default function EditStudentPage() {
             </select>
           </div>
           <div className="form-field">
+            <label htmlFor="academic_year_id">Academic year</label>
+            <select id="academic_year_id" name="academic_year_id" defaultValue={student.academic_year_id || ""}>
+              <option value="">Select&hellip;</option>
+              {academicYears.map((y: any) => (
+                <option key={y.id} value={y.id}>{y.label}{y.is_current ? " (Current)" : ""}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
             <label htmlFor="profile_id">Linked student login</label>
-            <select id="profile_id" value={profileId} onChange={(e) => setProfileId(e.target.value)}>
+            <select id="profile_id" name="profile_id" defaultValue={student.profile_id || ""}>
               <option value="">No login linked</option>
               {studentLogins.map((p) => (
                 <option key={p.id} value={p.id}>{p.full_name}</option>
@@ -132,7 +161,7 @@ export default function EditStudentPage() {
           </div>
           <div className="form-field">
             <label htmlFor="parent_profile_id">Linked parent login</label>
-            <select id="parent_profile_id" value={parentProfileId} onChange={(e) => setParentProfileId(e.target.value)}>
+            <select id="parent_profile_id" name="parent_profile_id" defaultValue={student.parent_profile_id || ""}>
               <option value="">No parent login linked</option>
               {parentLogins.map((p) => (
                 <option key={p.id} value={p.id}>{p.full_name}</option>

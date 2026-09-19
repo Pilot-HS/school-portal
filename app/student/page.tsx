@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CalendarCheck, BookOpen, Award, Wallet } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
+import TimetableGrid from "@/components/TimetableGrid";
 
 export default function StudentPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function StudentPage() {
   const [results, setResults] = useState<any[]>([]);
   const [fees, setFees] = useState<any[]>([]);
   const [notices, setNotices] = useState<any[]>([]);
+  const [timetable, setTimetable] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -46,16 +48,18 @@ export default function StudentPage() {
       setStudent(studentRow);
 
       if (studentRow) {
-        const [{ data: att }, { data: asg }, { data: res }, { data: fee }] = await Promise.all([
+        const [{ data: att }, { data: asg }, { data: res }, { data: fee }, { data: tt }] = await Promise.all([
           supabase.from("attendance").select("*").eq("student_id", studentRow.id).order("date", { ascending: false }).limit(10),
           supabase.from("assignments").select("*").eq("class_id", studentRow.class_id).order("due_date", { ascending: true }),
           supabase.from("exam_results").select("*").eq("student_id", studentRow.id),
           supabase.from("fees").select("*").eq("student_id", studentRow.id),
+          supabase.from("timetable_entries").select("*, teachers(full_name)").eq("class_id", studentRow.class_id),
         ]);
         setAttendance(att || []);
         setAssignments(asg || []);
         setResults(res || []);
         setFees(fee || []);
+        setTimetable(tt || []);
       }
 
       const { data: noticesData } = await supabase
@@ -109,6 +113,11 @@ export default function StudentPage() {
                 <div className="icon-stat-num">{fees.filter((f) => f.status === "unpaid").length}</div>
                 <div className="icon-stat-label">Unpaid charges</div>
               </div>
+            </div>
+
+            <div className="portal-panel">
+              <h2>Weekly Timetable</h2>
+              <TimetableGrid entries={timetable} showTeacher />
             </div>
 
             <div className="portal-panel">

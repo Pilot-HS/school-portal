@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import AdminLayout from "@/components/AdminLayout";
+import { formatApplicationId } from "@/lib/applicationId";
 
 const STATUS_OPTIONS = ["new", "under_review", "approved", "rejected", "enrolled"];
 const STATUS_LABELS: Record<string, string> = {
@@ -63,7 +64,7 @@ export default function AdmissionDetailPage() {
       }
       setFullName(profile.full_name);
 
-      const { data: app } = await supabase.from("admission_applications").select("*").eq("id", applicationId).single();
+      const { data: app } = await supabase.from("admission_applications").select("*, academic_years(label)").eq("id", applicationId).single();
       if (app) {
         setApplication(app);
         setStatus(app.status);
@@ -118,7 +119,18 @@ export default function AdmissionDetailPage() {
   return (
     <AdminLayout active="admissions" fullName={fullName}>
       <Link href="/admin/admissions" style={{ fontSize: "0.85rem", color: "var(--accent-2)" }}>&larr; Back to Admissions</Link>
-      <h1 style={{ fontSize: "1.4rem", marginTop: "10px", marginBottom: "20px" }}>{application.student_full_name}</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", marginBottom: "4px" }}>
+        <h1 style={{ fontSize: "1.4rem", margin: 0 }}>{application.student_full_name}</h1>
+        {application.status === "approved" && !application.converted_student_id && (
+          <Link href={`/admin/admissions/${applicationId}/convert`} className="btn btn-primary">Convert to Student</Link>
+        )}
+        {application.converted_student_id && (
+          <span className="pill pill-green">Enrolled &mdash; student record created</span>
+        )}
+      </div>
+      <p style={{ fontFamily: "monospace", color: "var(--muted)", marginBottom: "20px" }}>
+        {formatApplicationId(application.application_seq, application.created_at)}
+      </p>
 
       <div className="portal-panel" style={{ maxWidth: "500px" }}>
         <h2>School Use Only</h2>
@@ -179,6 +191,7 @@ export default function AdmissionDetailPage() {
           <Field label="Last School" value={application.last_school_name} />
           <Field label="Last Class" value={application.last_school_class} />
           <Field label="Class Applying For" value={application.class_applying_for} />
+          <Field label="Academic Year" value={application.academic_years?.label} />
         </div>
       </div>
 

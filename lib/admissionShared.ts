@@ -32,6 +32,8 @@ function str(formData: FormData, field: string): string | null {
   return value.trim();
 }
 
+export { formatApplicationId } from "./applicationId";
+
 export async function buildApplicationRecord(formData: FormData) {
   const [studentPhotoPath, bformImagePath, cnicFrontPath, cnicBackPath, certPath] = await Promise.all([
     uploadIfPresent(formData, "student_photo"),
@@ -69,6 +71,7 @@ export async function buildApplicationRecord(formData: FormData) {
     last_school_class: str(formData, "last_school_class"),
     last_school_certificate_path: certPath,
     class_applying_for: str(formData, "class_applying_for"),
+    academic_year_id: str(formData, "academic_year_id"),
 
     sibling_enrolled: str(formData, "sibling_enrolled") === "yes",
     sibling_name: str(formData, "sibling_name"),

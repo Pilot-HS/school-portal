@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin, buildApplicationRecord } from "@/lib/admissionShared";
+import { supabaseAdmin, buildApplicationRecord, formatApplicationId } from "@/lib/admissionShared";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { error } = await supabaseAdmin.from("admission_applications").insert(record);
+  const { data, error } = await supabaseAdmin.from("admission_applications").insert(record).select().single();
 
   if (error) {
     return NextResponse.json(
@@ -37,5 +37,7 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ success: true }, { headers: corsHeaders });
+  const referenceId = formatApplicationId(data.application_seq, data.created_at);
+
+  return NextResponse.json({ success: true, reference_id: referenceId }, { headers: corsHeaders });
 }

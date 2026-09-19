@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CalendarCheck, Award, Wallet } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
+import TimetableGrid from "@/components/TimetableGrid";
 
 export default function ParentPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function ParentPage() {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [fees, setFees] = useState<any[]>([]);
+  const [timetable, setTimetable] = useState<any[]>([]);
   const [notices, setNotices] = useState<any[]>([]);
 
   useEffect(() => {
@@ -60,14 +62,16 @@ export default function ParentPage() {
   useEffect(() => {
     if (!selectedChild) return;
     (async () => {
-      const [{ data: att }, { data: res }, { data: fee }] = await Promise.all([
+      const [{ data: att }, { data: res }, { data: fee }, { data: tt }] = await Promise.all([
         supabase.from("attendance").select("*").eq("student_id", selectedChild.id).order("date", { ascending: false }).limit(10),
         supabase.from("exam_results").select("*").eq("student_id", selectedChild.id),
         supabase.from("fees").select("*").eq("student_id", selectedChild.id),
+        supabase.from("timetable_entries").select("*, teachers(full_name)").eq("class_id", selectedChild.class_id),
       ]);
       setAttendance(att || []);
       setResults(res || []);
       setFees(fee || []);
+      setTimetable(tt || []);
     })();
   }, [selectedChild]);
 
@@ -124,6 +128,11 @@ export default function ParentPage() {
                 <div className="icon-stat-num">{fees.filter((f) => f.status === "unpaid").length}</div>
                 <div className="icon-stat-label">Unpaid charges</div>
               </div>
+            </div>
+
+            <div className="portal-panel">
+              <h2>Weekly Timetable</h2>
+              <TimetableGrid entries={timetable} showTeacher />
             </div>
 
             <div className="portal-panel">

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
-import { supabaseAdmin, buildApplicationRecord } from "@/lib/admissionShared";
+import { supabaseAdmin, buildApplicationRecord, formatApplicationId } from "@/lib/admissionShared";
 
 export async function POST(request: Request) {
   const auth = await requireAdmin(request);
@@ -21,5 +21,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  return NextResponse.json({ success: true, application: data });
+  const referenceId = formatApplicationId(data.application_seq, data.created_at);
+
+  return NextResponse.json({ success: true, application: data, reference_id: referenceId });
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import AdminLayout from "@/components/AdminLayout";
+import { formatApplicationId } from "@/lib/applicationId";
 
 const STATUS_LABELS: Record<string, string> = {
   new: "New",
@@ -22,11 +23,14 @@ const STATUS_PILL: Record<string, string> = {
   enrolled: "pill-green",
 };
 
+type SubTab = "all" | "pending" | "approved";
+
 export default function AdmissionsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
   const [applications, setApplications] = useState<any[]>([]);
+  const [subTab, setSubTab] = useState<SubTab>("all");
 
   useEffect(() => {
     (async () => {
@@ -49,7 +53,7 @@ export default function AdmissionsPage() {
 
       const { data } = await supabase
         .from("admission_applications")
-        .select("*")
+        .select("*, academic_years(label)")
         .order("created_at", { ascending: false });
       setApplications(data || []);
       setLoading(false);
@@ -60,11 +64,21 @@ export default function AdmissionsPage() {
 
   const newCount = applications.filter((a) => a.status === "new").length;
 
+  const filtered = applications.filter((a) => {
+    if (subTab === "all") return true;
+    if (subTab === "pending") return a.status === "new" || a.status === "under_review";
+    if (subTab === "approved") return a.status === "approved" || a.status === "enrolled";
+    return true;
+  });
+
   return (
     <AdminLayout active="admissions" fullName={fullName}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
         <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Admissions</h1>
-        <Link href="/admin/admissions/new" className="btn btn-primary">Add Application</Link>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <Link href="/admin/academic-years" className="btn btn-outline">Manage Academic Years</Link>
+          <Link href="/admin/admissions/new" className="btn btn-primary">Add Application</Link>
+        </div>
       </div>
       <p style={{ color: "var(--muted)", marginBottom: "20px" }}>
         Applications submitted through the public website, or entered here by office staff for walk-in families.
@@ -81,22 +95,35 @@ export default function AdmissionsPage() {
         </div>
       </div>
 
+      <div className="sub-tabs">
+        <button className={subTab === "all" ? "active" : ""} onClick={() => setSubTab("all")}>All Applications</button>
+        <button className={subTab === "pending" ? "active" : ""} onClick={() => setSubTab("pending")}>Pending Review</button>
+        <button className={subTab === "approved" ? "active" : ""} onClick={() => setSubTab("approved")}>Approved &amp; Enrolled</button>
+      </div>
+
       <div className="portal-panel">
-        {applications.length === 0 ? (
-          <p>No applications yet.</p>
+        {filtered.length === 0 ? (
+          <p>No applications in this view.</p>
         ) : (
           <table className="data-table">
-            <thead><tr><th>Date</th><th>Student</th><th>Father's Name</th><th>Class Applying</th><th>Contact</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Reference ID</th><th>Date</th><th>Student</th><th>Father's Name</th><th>Class Applying</th><th>Academic Year</th><th>Contact</th><th>Status</th><th></th></tr></thead>
             <tbody>
-              {applications.map((a) => (
+              {filtered.map((a) => (
                 <tr key={a.id}>
+                  <td style={{ fontFamily: "monospace", fontSize: "0.82rem" }}>{formatApplicationId(a.application_seq, a.created_at)}</td>
                   <td>{new Date(a.created_at).toLocaleDateString()}</td>
                   <td>{a.student_full_name}</td>
                   <td>{a.father_name || "\u2014"}</td>
                   <td>{a.class_applying_for || "\u2014"}</td>
+                  <td>{a.academic_years?.label || "\u2014"}</td>
                   <td>{a.parent_contact}</td>
                   <td><span className={`pill ${STATUS_PILL[a.status]}`}>{STATUS_LABELS[a.status]}</span></td>
-                  <td><Link href={`/admin/admissions/${a.id}`} className="btn btn-outline" style={{ padding: "4px 10px", fontSize: "0.78rem" }}>View</Link></td>
+                  <td style={{ display: "flex", gap: "6px" }}>
+                    <Link href={`/admin/admissions/${a.id}`} className="btn btn-outline" style={{ padding: "4px 10px", fontSize: "0.78rem" }}>View</Link>
+                    {a.status === "approved" && !a.converted_student_id && (
+                      <Link href={`/admin/admissions/${a.id}/convert`} className="btn btn-primary" style={{ padding: "4px 10px", fontSize: "0.78rem" }}>Convert to Student</Link>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
