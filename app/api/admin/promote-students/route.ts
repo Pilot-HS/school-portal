@@ -39,6 +39,11 @@ export async function POST(request: Request) {
     } else {
       promoted.push(student.full_name);
       takenRollNumbers.add(student.roll_no);
+      await supabaseAdmin.from("student_history").insert({
+        student_id: student.id,
+        event_type: "class_change",
+        details: "Promoted via bulk promotion",
+      });
     }
   }
 

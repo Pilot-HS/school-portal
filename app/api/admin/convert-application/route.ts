@@ -109,6 +109,10 @@ export async function POST(request: Request) {
       gr_number: gr_number || application.gr_number || null,
       date_of_birth: application.date_of_birth || null,
       photo_path: application.student_photo_path || null,
+      bform_image_path: application.bform_image_path || null,
+      father_cnic_front_path: application.father_cnic_front_path || null,
+      father_cnic_back_path: application.father_cnic_back_path || null,
+      last_school_certificate_path: application.last_school_certificate_path || null,
     })
     .select()
     .single();
@@ -121,6 +125,12 @@ export async function POST(request: Request) {
     .from("admission_applications")
     .update({ status: "enrolled", converted_student_id: student.id })
     .eq("id", application_id);
+
+  await supabaseAdmin.from("student_history").insert({
+    student_id: student.id,
+    event_type: "enrolled",
+    details: `Converted from admission application ${application_id}`,
+  });
 
   return NextResponse.json({ success: true, student, credentials: generatedCredentials });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseAdmin, uploadIfPresent } from "@/lib/admissionShared";
+import { saveCustomFieldValues } from "@/lib/customFields";
 
 export async function POST(request: Request) {
   const auth = await requireAdmin(request);
@@ -17,10 +18,13 @@ export async function POST(request: Request) {
   const parent_profile_id = (formData.get("parent_profile_id") as string) || null;
   const gr_number = (formData.get("gr_number") as string) || null;
   const date_of_birth = (formData.get("date_of_birth") as string) || null;
+  const house = (formData.get("house") as string) || null;
 
   if (!student_id || !full_name || !roll_no || !class_id) {
     return NextResponse.json({ error: "Student ID, name, roll number, and class are required" }, { status: 400 });
   }
+
+  const { data: beforeUpdate } = await supabaseAdmin.from("students").select("class_id").eq("id", student_id).single();
 
   const { data: existingRoll } = await supabaseAdmin
     .from("students")
@@ -57,6 +61,7 @@ export async function POST(request: Request) {
     parent_profile_id,
     gr_number,
     date_of_birth,
+    house,
   };
 
   // Academic year is optional and only updated if the form included the field
@@ -79,6 +84,16 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  if (beforeUpdate && beforeUpdate.class_id !== class_id) {
+    await supabaseAdmin.from("student_history").insert({
+      student_id,
+      event_type: "class_change",
+      details: `Class changed via edit`,
+    });
+  }
+
+  await saveCustomFieldValues(formData, "student", student_id);
 
   return NextResponse.json({ success: true, student: data });
 }

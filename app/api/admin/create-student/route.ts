@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseAdmin, uploadIfPresent } from "@/lib/admissionShared";
+import { saveCustomFieldValues } from "@/lib/customFields";
 
 export async function POST(request: Request) {
   const auth = await requireAdmin(request);
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
   const academic_year_id = (formData.get("academic_year_id") as string) || null;
   const gr_number = (formData.get("gr_number") as string) || null;
   const date_of_birth = (formData.get("date_of_birth") as string) || null;
+  const house = (formData.get("house") as string) || null;
 
   if (!full_name || !roll_no || !class_id) {
     return NextResponse.json({ error: "Name, roll number, and class are required" }, { status: 400 });
@@ -61,6 +63,7 @@ export async function POST(request: Request) {
       gr_number,
       date_of_birth,
       photo_path: photoPath,
+      house,
     })
     .select()
     .single();
@@ -68,6 +71,14 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  await supabaseAdmin.from("student_history").insert({
+    student_id: data.id,
+    event_type: "created",
+    details: `Added directly by admin`,
+  });
+
+  await saveCustomFieldValues(formData, "student", data.id);
 
   return NextResponse.json({ success: true, student: data });
 }

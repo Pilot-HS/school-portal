@@ -68,6 +68,11 @@ export default function StudentsListPage() {
   }, [router]);
 
   async function toggleActive(studentId: string, currentActive: boolean) {
+    let reason: string | null = null;
+    if (currentActive) {
+      reason = window.prompt("Reason for deactivating (e.g. 'Transferred to another school'). Leave blank to skip:");
+      if (reason === null) return; // user cancelled
+    }
     setTogglingId(studentId);
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
@@ -75,11 +80,33 @@ export default function StudentsListPage() {
     await fetch("/api/admin/toggle-student-active", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ student_id: studentId, is_active: !currentActive }),
+      body: JSON.stringify({ student_id: studentId, is_active: !currentActive, reason: reason || undefined }),
     });
 
     await loadStudents(token!);
     setTogglingId(null);
+  }
+
+  function exportToCsv() {
+    const headers = ["Name", "GR Number", "Roll No", "Class", "House", "Status"];
+    const rows = filtered.map((s) => [
+      s.full_name,
+      s.gr_number || "",
+      s.roll_no,
+      s.classes?.name || "",
+      s.house || "",
+      s.is_active !== false ? "Active" : "Inactive",
+    ]);
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `students-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   if (loading) return <div className="loading-shell">Loading&hellip;</div>;
@@ -99,6 +126,8 @@ export default function StudentsListPage() {
         <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Students</h1>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           <Link href="/admin/academic-years" className="btn btn-outline">Manage Academic Years</Link>
+          <Link href="/admin/custom-fields" className="btn btn-outline">Manage Extra Fields</Link>
+          <Link href="/admin/houses" className="btn btn-outline">Houses</Link>
           <Link href="/admin/students/birthdays" className="btn btn-outline">Birthdays</Link>
           <Link href="/admin/students/promote" className="btn btn-outline">Promote Students</Link>
           <Link href="/admin/students/new" className="btn btn-primary">Add Student</Link>
@@ -106,28 +135,31 @@ export default function StudentsListPage() {
       </div>
 
       <div className="portal-panel">
-        <div className="filter-bar">
-          <input
-            type="text"
-            placeholder="Search by name&hellip;"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            style={{ minWidth: "200px" }}
-          />
-          <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
-            <option value="all">All Classes</option>
-            {classes.map((c) => <option key={c.id} value={c.id}>{c.grade}-{c.section}</option>)}
-          </select>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="all">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
+        <div className="filter-bar" style={{ justifyContent: "space-between" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <input
+              type="text"
+              placeholder="Search by name&hellip;"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              style={{ minWidth: "200px" }}
+            />
+            <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
+              <option value="all">All Classes</option>
+              {classes.map((c) => <option key={c.id} value={c.id}>{c.grade}-{c.section}</option>)}
+            </select>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <button className="btn btn-outline" onClick={exportToCsv}>Export to CSV</button>
         </div>
 
         {filtered.length === 0 ? <p>No students match this view.</p> : (
           <table className="data-table">
-            <thead><tr><th></th><th>Name</th><th>GR No.</th><th>Roll No.</th><th>Class</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th></th><th>Name</th><th>GR No.</th><th>Roll No.</th><th>Class</th><th>House</th><th>Status</th><th></th></tr></thead>
             <tbody>
               {filtered.map((s) => {
                 const isActive = s.is_active !== false;
@@ -144,6 +176,7 @@ export default function StudentsListPage() {
                     <td>{s.gr_number || "\u2014"}</td>
                     <td>{s.roll_no}</td>
                     <td>{s.classes?.name || "\u2014"}</td>
+                    <td>{s.house || "\u2014"}</td>
                     <td><span className={`pill ${isActive ? "pill-green" : "pill-red"}`}>{isActive ? "Active" : "Inactive"}</span></td>
                     <td style={{ display: "flex", gap: "6px" }}>
                       <Link href={`/admin/students/${s.id}/edit`} className="btn btn-outline" style={{ padding: "4px 10px", fontSize: "0.78rem" }}>Edit</Link>

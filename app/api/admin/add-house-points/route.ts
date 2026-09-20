@@ -8,23 +8,17 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { student_id, is_active, reason } = body;
+  const { house, points, reason } = body;
 
-  if (!student_id || typeof is_active !== "boolean") {
-    return NextResponse.json({ error: "student_id and is_active are required" }, { status: 400 });
+  if (!house || points === undefined || points === null) {
+    return NextResponse.json({ error: "House and points are required" }, { status: 400 });
   }
 
-  const { error } = await supabaseAdmin.from("students").update({ is_active }).eq("id", student_id);
+  const { error } = await supabaseAdmin.from("house_points").insert({ house, points: Number(points), reason: reason || null });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
-
-  await supabaseAdmin.from("student_history").insert({
-    student_id,
-    event_type: is_active ? "activated" : "deactivated",
-    details: reason || null,
-  });
 
   return NextResponse.json({ success: true });
 }

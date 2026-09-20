@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import AdminLayout from "@/components/AdminLayout";
+import CustomFieldInputs from "@/components/CustomFieldInputs";
 
 export default function NewStudentPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function NewStudentPage() {
   const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [unlinkedStudentLogins, setUnlinkedStudentLogins] = useState<any[]>([]);
   const [unlinkedParentLogins, setUnlinkedParentLogins] = useState<any[]>([]);
+  const [customFields, setCustomFields] = useState<any[]>([]);
   const [defaultAcademicYearId, setDefaultAcademicYearId] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -57,6 +59,15 @@ export default function NewStudentPage() {
       }
       setFullName(profile.full_name);
       await loadDropdownData();
+
+      const { data: fields } = await supabase
+        .from("custom_field_definitions")
+        .select("*")
+        .eq("form_type", "student")
+        .eq("is_active", true)
+        .order("display_order");
+      setCustomFields(fields || []);
+
       setLoading(false);
     })();
   }, [router]);
@@ -127,6 +138,16 @@ export default function NewStudentPage() {
             <input id="photo" name="photo" type="file" accept="image/jpeg,image/png" />
           </div>
           <div className="form-field">
+            <label htmlFor="house">House (optional)</label>
+            <select id="house" name="house">
+              <option value="">Not assigned</option>
+              <option>Iqbal</option>
+              <option>Jinnah</option>
+              <option>Liaquat</option>
+              <option>Fatima</option>
+            </select>
+          </div>
+          <div className="form-field">
             <label htmlFor="class_id">Class</label>
             <select id="class_id" name="class_id" required>
               <option value="">Select a class&hellip;</option>
@@ -162,6 +183,7 @@ export default function NewStudentPage() {
               ))}
             </select>
           </div>
+          <CustomFieldInputs definitions={customFields} section="Student Information" />
           <button type="submit" className="btn btn-primary" disabled={submitting || classes.length === 0}>
             {submitting ? "Adding…" : "Add Student"}
           </button>
