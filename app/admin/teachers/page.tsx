@@ -113,6 +113,8 @@ export default function TeachersListPage() {
         <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Teachers</h1>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           <Link href="/admin/custom-fields" className="btn btn-outline">Manage Extra Fields</Link>
+          <Link href="/admin/staff-attendance" className="btn btn-outline">Staff Attendance</Link>
+          <Link href="/admin/leave-requests" className="btn btn-outline">Leave Requests</Link>
           <Link href="/admin/teachers/new" className="btn btn-primary">Add Teacher</Link>
         </div>
       </div>
