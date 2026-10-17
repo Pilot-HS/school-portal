@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseAdmin, uploadIfPresent } from "@/lib/admissionShared";
 import { saveCustomFieldValues } from "@/lib/customFields";
+import { checkTeacherLoginLinkable } from "@/lib/loginLink";
 
 function str(formData: FormData, field: string): string | null {
   const value = formData.get(field);
@@ -36,9 +37,16 @@ export async function POST(request: Request) {
     }
   }
 
+  const profileIdValue = str(formData, "profile_id");
+  if (profileIdValue) {
+    const problem = await checkTeacherLoginLinkable(profileIdValue, teacher_id);
+    if (problem) {
+      return NextResponse.json({ error: problem }, { status: 400 });
+    }
+  }
+
   const updates: Record<string, any> = {
     full_name,
-    profile_id: str(formData, "profile_id"),
     father_husband_name: str(formData, "father_husband_name"),
     gender: str(formData, "gender"),
     date_of_birth: str(formData, "date_of_birth"),
@@ -67,6 +75,11 @@ export async function POST(request: Request) {
     passing_year: str(formData, "passing_year"),
     subject: str(formData, "qualification_subject"),
   };
+
+  // Only touch the login link if the form actually sent that field
+  if (formData.has("profile_id")) {
+    updates.profile_id = profileIdValue;
+  }
 
   const [photoPath, cnicCopyPath, appointmentOrderPath, degreeCertificatePath, joiningReportPath] = await Promise.all([
     uploadIfPresent(formData, "photo"),

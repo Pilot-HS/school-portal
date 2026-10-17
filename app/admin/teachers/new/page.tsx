@@ -12,6 +12,7 @@ export default function NewTeacherPage() {
   const [loading, setLoading] = useState(true);
   const [fullName, setFullName] = useState("");
   const [customFields, setCustomFields] = useState<any[]>([]);
+  const [existingLogins, setExistingLogins] = useState<any[]>([]);
   const [createLogin, setCreateLogin] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -43,6 +44,14 @@ export default function NewTeacherPage() {
         .eq("is_active", true)
         .order("display_order");
       setCustomFields(fields || []);
+
+      const [{ data: teacherLogins }, { data: linkedTeachers }] = await Promise.all([
+        supabase.from("profiles").select("id, full_name").eq("role", "teacher"),
+        supabase.from("teachers").select("profile_id"),
+      ]);
+      const linkedIds = new Set((linkedTeachers || []).map((t: any) => t.profile_id).filter(Boolean));
+      setExistingLogins((teacherLogins || []).filter((p: any) => !linkedIds.has(p.id)));
+
       setLoading(false);
     })();
   }, [router]);
@@ -72,8 +81,10 @@ export default function NewTeacherPage() {
     } else {
       setMessage({ type: "success", text: "Teacher record saved." });
       if (result.credentials) setCredentials(result.credentials);
+      const usedLogin = formData.get("existing_profile_id");
       form.reset();
       setCreateLogin(false);
+      if (usedLogin) setExistingLogins((prev) => prev.filter((p) => p.id !== usedLogin));
     }
     setSubmitting(false);
   }
@@ -298,7 +309,19 @@ export default function NewTeacherPage() {
               <label htmlFor="login_password">Temporary password (leave blank to auto-generate)</label>
               <input id="login_password" name="login_password" minLength={6} />
               <p className="form-note" style={{ marginTop: "6px", marginBottom: 0 }}>
-                Uses the email address entered above. If no email was given, a login ID will be auto-generated instead \u2014 "Forgot Password" won't work for that, so a real email is recommended.
+                Uses the email address entered above. If no email was given, a login ID will be auto-generated instead &mdash; "Forgot Password" won't work for that, so a real email is recommended.
+              </p>
+            </div>
+          )}
+          {!createLogin && (
+            <div className="form-field">
+              <label htmlFor="existing_profile_id">Or link an existing teacher login</label>
+              <select id="existing_profile_id" name="existing_profile_id">
+                <option value="">Don't link a login</option>
+                {existingLogins.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+              </select>
+              <p className="form-note" style={{ marginTop: "6px", marginBottom: 0 }}>
+                Shows teacher logins that aren't linked to a record yet. Create logins from the Accounts page.
               </p>
             </div>
           )}

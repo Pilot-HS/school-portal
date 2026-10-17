@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseAdmin, uploadIfPresent } from "@/lib/admissionShared";
 import { saveCustomFieldValues } from "@/lib/customFields";
+import { checkTeacherLoginLinkable } from "@/lib/loginLink";
 
 function str(formData: FormData, field: string): string | null {
   const value = formData.get(field);
@@ -64,6 +65,15 @@ export async function POST(request: Request) {
 
     profileId = userData.user.id;
     generatedCredentials = { email: loginEmail, password: loginPassword };
+  } else {
+    const existingProfileId = str(formData, "existing_profile_id");
+    if (existingProfileId) {
+      const problem = await checkTeacherLoginLinkable(existingProfileId, null);
+      if (problem) {
+        return NextResponse.json({ error: problem }, { status: 400 });
+      }
+      profileId = existingProfileId;
+    }
   }
 
   const [photoPath, cnicCopyPath, appointmentOrderPath, degreeCertificatePath, joiningReportPath] = await Promise.all([

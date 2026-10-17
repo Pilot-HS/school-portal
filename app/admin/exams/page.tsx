@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import AdminLayout from "@/components/AdminLayout";
 
@@ -47,7 +48,14 @@ export default function ExamsPage() {
 
   return (
     <AdminLayout active="exams" fullName={fullName}>
-      <h1 style={{ fontSize: "1.4rem", marginBottom: "20px" }}>Exams &amp; Results</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
+        <h1 style={{ fontSize: "1.4rem", margin: 0 }}>Exams &amp; Results</h1>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <Link href="/admin/subjects" className="btn btn-outline">Subjects</Link>
+          <Link href="/admin/exams-schedule" className="btn btn-outline">Exam Scheduling</Link>
+          <Link href="/admin/grading-scale" className="btn btn-outline">Grading Scale</Link>
+        </div>
+      </div>
 
       <div className="portal-panel">
         {results.length === 0 ? (

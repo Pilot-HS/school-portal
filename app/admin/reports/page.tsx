@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import AdminLayout from "@/components/AdminLayout";
+import { getGradeForPercentage } from "@/lib/grading";
 
 const SCHOOL_NAME = "Government Boys High School, P.H. Pilot, Dadu";
 
@@ -88,11 +89,19 @@ function ReportCard() {
   const [student, setStudent] = useState<any>(null);
   const [results, setResults] = useState<any[]>([]);
   const [attendanceStats, setAttendanceStats] = useState({ present: 0, total: 0 });
+  const [gradeBands, setGradeBands] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("students").select("*, classes(name)").order("full_name");
+      const [{ data }, { data: activeScale }] = await Promise.all([
+        supabase.from("students").select("*, classes(name)").order("full_name"),
+        supabase.from("grading_scales").select("*").eq("is_active", true).maybeSingle(),
+      ]);
       setStudents(data || []);
+      if (activeScale) {
+        const { data: bands } = await supabase.from("grade_bands").select("*").eq("grading_scale_id", activeScale.id);
+        setGradeBands(bands || []);
+      }
     })();
   }, []);
 
@@ -151,20 +160,25 @@ function ReportCard() {
           ) : (
             <>
               <table className="data-table">
-                <thead><tr><th>Subject</th><th>Exam</th><th>Marks</th><th>Percentage</th></tr></thead>
+                <thead><tr><th>Subject</th><th>Exam</th><th>Marks</th><th>Percentage</th><th>Grade</th></tr></thead>
                 <tbody>
-                  {results.map((r) => (
-                    <tr key={r.id}>
-                      <td>{r.subject}</td>
-                      <td>{r.exam_name}</td>
-                      <td>{r.marks_obtained} / {r.total_marks}</td>
-                      <td>{Math.round((Number(r.marks_obtained) / Number(r.total_marks)) * 100)}%</td>
-                    </tr>
-                  ))}
+                  {results.map((r) => {
+                    const subjectPct = Math.round((Number(r.marks_obtained) / Number(r.total_marks)) * 100);
+                    return (
+                      <tr key={r.id}>
+                        <td>{r.subject}</td>
+                        <td>{r.exam_name}</td>
+                        <td>{r.marks_obtained} / {r.total_marks}</td>
+                        <td>{subjectPct}%</td>
+                        <td>{gradeBands.length > 0 ? getGradeForPercentage(subjectPct, gradeBands) : "\u2014"}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               <p style={{ marginTop: "16px", fontWeight: 600 }}>
                 Overall: {totalObtained} / {totalPossible} ({percentage}%)
+                {gradeBands.length > 0 && <> &mdash; Grade: {getGradeForPercentage(percentage, gradeBands)}</>}
               </p>
             </>
           )}

@@ -25,6 +25,7 @@ export default function EditTeacherPage() {
   const [photoUrl, setPhotoUrl] = useState("");
   const [docUrls, setDocUrls] = useState<Record<string, string>>({});
   const [customFields, setCustomFields] = useState<any[]>([]);
+  const [teacherLogins, setTeacherLogins] = useState<any[]>([]);
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [customFileUrls, setCustomFileUrls] = useState<Record<string, string>>({});
 
@@ -52,10 +53,16 @@ export default function EditTeacherPage() {
 
       const token = session.access_token;
 
-      const [{ data: teacherRow }, { data: fields }] = await Promise.all([
+      const [{ data: teacherRow }, { data: fields }, { data: loginProfiles }, { data: allTeachers }] = await Promise.all([
         supabase.from("teachers").select("*").eq("id", teacherId).single(),
         supabase.from("custom_field_definitions").select("*").eq("form_type", "teacher").eq("is_active", true).order("display_order"),
+        supabase.from("profiles").select("id, full_name").eq("role", "teacher"),
+        supabase.from("teachers").select("id, profile_id"),
       ]);
+      const linkedElsewhere = new Set(
+        (allTeachers || []).filter((t: any) => t.id !== teacherId && t.profile_id).map((t: any) => t.profile_id)
+      );
+      setTeacherLogins((loginProfiles || []).filter((p: any) => !linkedElsewhere.has(p.id)));
 
       if (teacherRow) {
         setTeacher(teacherRow);
@@ -343,9 +350,16 @@ export default function EditTeacherPage() {
 
         <div className="portal-panel" style={{ maxWidth: "480px" }}>
           <h2>6. Portal Account</h2>
-          <p style={{ fontSize: "0.85rem" }}>
-            {teacher.profile_id ? "This teacher has a linked portal login." : "This teacher does not have a portal login yet. Use \"Create New Account\" from the Admin dashboard, then link it here by re-saving with the login's email matching above."}
-          </p>
+          <div className="form-field">
+            <label htmlFor="profile_id">Linked portal login</label>
+            <select id="profile_id" name="profile_id" defaultValue={teacher.profile_id || ""}>
+              <option value="">No login linked</option>
+              {teacherLogins.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+            </select>
+            <p className="form-note" style={{ marginTop: "6px", marginBottom: 0 }}>
+              Create new logins from the Accounts page, then pick them here. Choosing "No login linked" removes the link.
+            </p>
+          </div>
           <CustomFieldInputs definitions={customFields} section="Portal account" values={customValues} fileUrls={customFileUrls} />
         </div>
 
