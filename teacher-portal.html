@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Portal (Preview) | Government Boys High School, P.H. Pilot, Dadu</title>
+<meta name="description" content="Preview of the GBHS Pilot Dadu teacher portal — classes, attendance, homework, exams, and marks.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <div class="container">
+    <div class="topbar-info">
+      <span>&#9742; +92 300 1112233</span>
+      <span>&#9993; info@gbhspilotdadu.edu.pk</span>
+      <span>&#128205; P.H. Pilot, Dadu, Sindh</span>
+    </div>
+    <div class="topbar-links">
+      <a href="#">EN</a>
+      <a href="#">&#128269;</a>
+      <a href="https://school-portal-topaz.vercel.app/login" class="portal-link">Portal Login</a>
+    </div>
+  </div>
+</div>
+<header class="site-header">
+  <div class="container nav-row">
+    <a href="index.html" class="brand">
+      <div class="brand-mark">G</div>
+      <div class="brand-text">
+        <span class="school-name">Government Boys High School, P.H. Pilot, Dadu</span>
+        <span class="school-tagline">Learning Today, Leading Tomorrow</span>
+      </div>
+    </a>
+    <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="academics.html">Academics</a>
+        <a href="admissions.html">Admissions</a>
+        <a href="student-life.html">Student Life</a>
+        <a href="faculty.html">Faculty</a>
+        <a href="news-events.html">News & Events</a>
+        <a href="gallery.html">Gallery</a>
+        <a href="resources.html">Resources</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+    <div class="header-cta">
+      <a href="admissions.html" class="btn btn-primary btn-sm">Apply Now</a>
+      <button class="menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="demo-banner">
+  <strong>Prototype preview</strong> — this portal uses sample data and is not connected to a real login, database, or student records yet.
+</div>
+
+
+<div class="portal-shell">
+  
+<div class="portal-sidebar">
+  <a href="#" class="active">Dashboard</a>
+  <a href="#">My Classes</a>
+  <a href="#">Attendance</a>
+  <a href="#">Homework</a>
+  <a href="#">Exams &amp; Marks</a>
+  <a href="#">Timetable</a>
+  <a href="#">Notices</a>
+  <a href="#">Messages</a>
+</div>
+
+  <div class="portal-main">
+    <h1 style="font-size:1.6rem;margin-bottom:4px;">Welcome, Mr. Omar Sheikh</h1>
+    <p style="margin-bottom:28px;">Mathematics Teacher &middot; Sample data shown for preview purposes</p>
+
+    <div class="portal-cards">
+      <div class="portal-stat-card"><div class="ps-num">4</div><div class="ps-label">Classes today</div></div>
+      <div class="portal-stat-card"><div class="ps-num">156</div><div class="ps-label">Students taught</div></div>
+      <div class="portal-stat-card"><div class="ps-num">2</div><div class="ps-label">Assignments to grade</div></div>
+      <div class="portal-stat-card"><div class="ps-num">12 Oct</div><div class="ps-label">Next exam to set</div></div>
+    </div>
+
+    <div class="portal-panel">
+      <h2>Today's Schedule</h2>
+      <table class="data-table">
+        <thead><tr><th>Period</th><th>Class</th><th>Subject</th><th>Room</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>9-A</td><td>Mathematics</td><td>9-A</td></tr>
+          <tr><td>2</td><td>9-B</td><td>Mathematics</td><td>9-B</td></tr>
+          <tr><td>4</td><td>10-A</td><td>Mathematics</td><td>10-A</td></tr>
+          <tr><td>6</td><td>8-A</td><td>Mathematics</td><td>8-A</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="portal-panel">
+      <h2>Take Attendance &mdash; Grade 9-A</h2>
+      <table class="data-table">
+        <thead><tr><th>Roll No.</th><th>Student</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>12</td><td>Bilal Shar</td><td><span class="pill pill-green">Present</span></td></tr>
+          <tr><td>13</td><td>Hassan Memon</td><td><span class="pill pill-green">Present</span></td></tr>
+          <tr><td>14</td><td>Ahmed Nawaz</td><td><span class="pill pill-green">Present</span></td></tr>
+          <tr><td>15</td><td>Kashif Solangi</td><td><span class="pill pill-red">Absent</span></td></tr>
+        </tbody>
+      </table>
+      <p class="form-note mt-32" style="margin-bottom:0;">In the real system this would save to the database and notify parents instantly &mdash; here it's a static preview.</p>
+    </div>
+
+    <div class="portal-panel">
+      <h2>Assignments to Grade</h2>
+      <table class="data-table">
+        <thead><tr><th>Class</th><th>Assignment</th><th>Submitted</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>9-A</td><td>Chapter 4 exercise set</td><td>28 / 32</td><td><span class="pill pill-amber">Grading</span></td></tr>
+          <tr><td>10-A</td><td>Algebra revision sheet</td><td>30 / 30</td><td><span class="pill pill-amber">Grading</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="cta-band">
+  <div class="container cta-band-inner" style="padding-top:36px;padding-bottom:36px;">
+    <div>
+      <h2 style="margin-bottom:6px;">Admissions for the new academic year are open</h2>
+      <p style="margin:0;">Applications, campus visits, and the prospectus are all available online.</p>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <a href="admissions.html" class="btn btn-primary">Start Application</a>
+      <a href="resources.html" class="btn btn-outline">Download Prospectus</a>
+    </div>
+  </div>
+</div>
+
+<section class="newsletter tight">
+  <div class="container">
+    <div class="two-col" style="align-items:flex-start;">
+      <div>
+        <h2 style="color:#fff;">Stay in the loop</h2>
+        <p style="color:#b9c4c9;">Get news, event dates, and admissions deadlines in your inbox. About once a month, no spam.</p>
+      </div>
+      <div>
+        <form class="newsletter-form" data-demo-form>
+          <input type="email" placeholder="Your email address" required aria-label="Email address">
+          <button type="submit" class="btn btn-primary">Subscribe</button>
+        </form>
+        <p class="form-submit-note" style="color:#8fa0aa;font-size:0.8rem;margin-top:10px;"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="brand" style="margin-bottom:14px;">
+          <div class="brand-mark">G</div>
+          <div class="brand-text">
+            <span class="school-name" style="color:#fff;">Government Boys High School, P.H. Pilot, Dadu</span>
+          </div>
+        </div>
+        <p style="font-size:0.87rem;max-width:280px;">A Government of Sindh boys' school serving Dadu from Grade 1 through Matric, committed to discipline, academics, and community.</p>
+        <div class="footer-social mt-32">
+          <a href="#" aria-label="Facebook">FB</a>
+          <a href="#" aria-label="Instagram">IG</a>
+          <a href="#" aria-label="YouTube">YT</a>
+        </div>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="academics.html">Academics</a></li>
+          <li><a href="student-life.html">Student Life</a></li>
+          <li><a href="news-events.html">News & Events</a></li>
+          <li><a href="faculty.html">Faculty Directory</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Admissions</h4>
+        <ul>
+          <li><a href="admissions.html">How to Apply</a></li>
+          <li><a href="admissions.html#fees">Fee Structure</a></li>
+          <li><a href="admissions.html#faqs">FAQs</a></li>
+          <li><a href="resources.html">Prospectus</a></li>
+          <li><a href="contact.html">Book a Visit</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li>P.H. Pilot, Taluka &amp; District Dadu, Sindh</li>
+          <li>+92 300 1112233</li>
+          <li>info@gbhspilotdadu.edu.pk</li>
+          <li>Mon&ndash;Fri, 8:00 AM &ndash; 3:30 PM</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Government Boys High School, P.H. Pilot, Dadu. All rights reserved.</span>
+      <div style="display:flex;gap:18px;">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="#">Accessibility</a>
+        <a href="#">Sitemap</a>
+      </div>
+    </div>
+  </div>
+</footer>
+<script src="js/main.js"></script>
+</body>
+</html>
