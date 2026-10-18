@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Eye, EyeOff, ClipboardCheck, BookOpen, Award } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +20,7 @@ export default function LoginPage() {
     setLoading(true);
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
 
@@ -46,44 +48,85 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-shell">
-      <div className="login-card">
-        <h1 style={{ fontSize: "1.4rem", marginBottom: "4px" }}>Portal Login</h1>
-        <p style={{ fontSize: "0.87rem", color: "var(--muted)", marginBottom: "22px" }}>
-          Government Boys High School, P.H. Pilot, Dadu
-        </p>
-        <form onSubmit={handleSubmit}>
-          <div className="form-field">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <button type="submit" className="btn btn-primary" style={{ width: "100%" }} disabled={loading}>
-            {loading ? "Signing in…" : "Log In"}
-          </button>
-          {error && <p className="error-text">{error}</p>}
-          <p style={{ fontSize: "0.8rem", marginTop: "14px" }}>
-            <Link href="/forgot-password" style={{ color: "var(--accent-2)" }}>Forgot your password?</Link>
+    <div className="auth-page">
+      <div className="auth-brand">
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div className="auth-mark">G</div>
+          <h2>Government Boys High School, P.H. Pilot, Dadu</h2>
+          <p className="auth-tagline">Learning Today, Leading Tomorrow</p>
+          <ul className="auth-points">
+            <li>
+              <span className="pt-icon"><ClipboardCheck size={17} /></span>
+              Attendance and timetables, always up to date
+            </li>
+            <li>
+              <span className="pt-icon"><BookOpen size={17} /></span>
+              Homework and notices in one place
+            </li>
+            <li>
+              <span className="pt-icon"><Award size={17} /></span>
+              Exam results and progress at a glance
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="auth-panel">
+        <div className="auth-box">
+          <h1>Welcome back</h1>
+          <p className="auth-sub">Sign in to your school portal.</p>
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-field">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="form-field">
+              <label htmlFor="password">Password</label>
+              <div className="auth-input-wrap">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  placeholder="Your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="auth-toggle"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary auth-submit" disabled={loading}>
+              {loading ? "Signing in…" : "Log In"}
+            </button>
+
+            {error && <div className="auth-error" role="alert">{error}</div>}
+
+            <p style={{ marginTop: "16px", marginBottom: 0 }}>
+              <Link href="/forgot-password" className="auth-link">Forgot your password?</Link>
+            </p>
+          </form>
+
+          <p className="auth-foot">
+            Don&apos;t have an account? Ask the school office &mdash; accounts are created by the admin, not self-registered.
           </p>
-        </form>
-        <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "20px" }}>
-          Don't have an account? Ask the school office &mdash; accounts are created by the admin, not self-registered.
-        </p>
+        </div>
       </div>
     </div>
   );

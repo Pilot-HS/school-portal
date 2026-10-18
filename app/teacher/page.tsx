@@ -1,25 +1,63 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { School, BookOpen } from "lucide-react";
+import {
+  School,
+  BookOpen,
+  ClipboardCheck,
+  Award,
+  CalendarDays,
+  CalendarCheck,
+  Bell,
+  ChevronRight,
+  Clock,
+  Coffee,
+} from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
 import TimetableGrid from "@/components/TimetableGrid";
 
+function localISODate(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="skeleton-wrap" aria-busy="true" aria-label="Loading dashboard">
+      <div className="skeleton" style={{ height: 120 }} />
+      <div className="skeleton" style={{ height: 80 }} />
+      <div className="skeleton" style={{ height: 90 }} />
+      <div className="skeleton" style={{ height: 220 }} />
+    </div>
+  );
+}
+
 export default function TeacherPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [fullName, setFullName] = useState("");
   const [teacher, setTeacher] = useState<any>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
-  const [classes, setClasses] = useState<any[]>([]);
   const [notices, setNotices] = useState<any[]>([]);
 
-  useEffect(() => {
-    (async () => {
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError("");
+    try {
       const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData.session;
       if (!session) {
@@ -27,134 +65,277 @@ export default function TeacherPage() {
         return;
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role, full_name")
-        .eq("id", session.user.id)
-        .single();
+      // Step 1: who is this? (profile + teacher record fetched together)
+      const [{ data: profile }, { data: teacherRow }] = await Promise.all([
+        supabase.from("profiles").select("role, full_name").eq("id", session.user.id).single(),
+        supabase.from("teachers").select("id, subject").eq("profile_id", session.user.id).maybeSingle(),
+      ]);
 
       if (!profile || profile.role !== "teacher") {
         router.replace(profile?.role ? `/${profile.role}` : "/login");
         return;
       }
       setFullName(profile.full_name);
-
-      const { data: teacherRow } = await supabase
-        .from("teachers")
-        .select("*")
-        .eq("profile_id", session.user.id)
-        .single();
       setTeacher(teacherRow);
 
-      const { data: classData } = await supabase.from("classes").select("*").order("grade");
-      setClasses(classData || []);
+      // Step 2: everything else at the same time
+      const [asgRes, ttRes, noticeRes] = await Promise.all([
+        teacherRow
+          ? supabase
+              .from("assignments")
+              .select("id, title, subject, due_date, classes(name)")
+              .eq("created_by", teacherRow.id)
+              .order("due_date", { ascending: false })
+          : Promise.resolve({ data: [] as any[], error: null }),
+        teacherRow
+          ? supabase.from("timetable_entries").select("*, classes(name)").eq("teacher_id", teacherRow.id)
+          : Promise.resolve({ data: [] as any[], error: null }),
+        supabase
+          .from("notices")
+          .select("id, title, created_at")
+          .in("audience", ["all", "teachers"])
+          .order("created_at", { ascending: false })
+          .limit(5),
+      ]);
 
-      if (teacherRow) {
-        const [{ data: asg }, { data: tt }] = await Promise.all([
-          supabase.from("assignments").select("*, classes(name)").eq("created_by", teacherRow.id).order("due_date", { ascending: false }),
-          supabase.from("timetable_entries").select("*, classes(name)").eq("teacher_id", teacherRow.id),
-        ]);
-        setAssignments(asg || []);
-        setTimetable(tt || []);
+      if (asgRes.error || ttRes.error || noticeRes.error) {
+        throw new Error("Some information could not be loaded.");
       }
 
-      const { data: noticesData } = await supabase
-        .from("notices")
-        .select("*")
-        .in("audience", ["all", "teachers"])
-        .order("created_at", { ascending: false })
-        .limit(5);
-      setNotices(noticesData || []);
-
-      setLoading(false);
-    })();
+      setAssignments(asgRes.data || []);
+      setTimetable(ttRes.data || []);
+      setNotices(noticeRes.data || []);
+    } catch (err) {
+      setLoadError("We couldn't load everything just now. Please check your internet and try again.");
+    }
+    setLoading(false);
   }, [router]);
 
-  if (loading) return <div className="loading-shell">Loading&hellip;</div>;
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (loading) return <DashboardSkeleton />;
+
+  // ----- Work out today's view -----
+  const now = new Date();
+  const todayName = now.toLocaleDateString("en-US", { weekday: "long" });
+  const todayLabel = now.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  const todaysPeriods = timetable
+    .filter((e) => e.day_of_week === todayName)
+    .sort((a, b) => a.period_number - b.period_number);
+
+  const myClassNames = Array.from(
+    new Set(timetable.map((e) => e.classes?.name).filter(Boolean))
+  ) as string[];
+
+  const todayISO = localISODate(now);
+  const weekAhead = new Date(now);
+  weekAhead.setDate(weekAhead.getDate() + 7);
+  const weekAheadISO = localISODate(weekAhead);
+  const soonISO = (() => {
+    const d = new Date(now);
+    d.setDate(d.getDate() + 3);
+    return localISODate(d);
+  })();
+
+  const dueThisWeek = assignments.filter((a) => a.due_date >= todayISO && a.due_date <= weekAheadISO).length;
+  const recentAssignments = assignments.slice(0, 5);
 
   return (
     <div>
       <PortalNav role="teacher" fullName={fullName} />
       <div className="portal-main">
-        <h1 style={{ fontSize: "1.5rem" }}>Welcome, {fullName}</h1>
-        <p style={{ color: "var(--muted)", marginBottom: "24px" }}>
-          {teacher?.subject ? `${teacher.subject} Teacher` : "Teacher"}
-        </p>
+        {/* Greeting */}
+        <div className="t-hero">
+          <div className="t-hero-date">{todayLabel}</div>
+          <h1>
+            {greeting()}, {fullName}
+          </h1>
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <span className="t-chip">
+              <BookOpen size={14} /> {teacher?.subject ? `${teacher.subject} Teacher` : "Teacher"}
+            </span>
+            <span className="t-chip">
+              <Clock size={14} /> {todaysPeriods.length} {todaysPeriods.length === 1 ? "period" : "periods"} today
+            </span>
+          </div>
+        </div>
 
-        <div className="portal-cards">
-          <div className="icon-stat-card">
+        {loadError && (
+          <div className="t-error" role="alert">
+            <span>{loadError}</span>
+            <button className="btn btn-outline" onClick={load}>Try again</button>
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="t-stats">
+          <div className="t-stat">
+            <div className="icon-badge icon-badge-amber"><CalendarCheck size={18} /></div>
+            <div>
+              <div className="t-stat-num">{todaysPeriods.length}</div>
+              <div className="t-stat-label">Periods today</div>
+            </div>
+          </div>
+          <div className="t-stat">
             <div className="icon-badge icon-badge-blue"><School size={18} /></div>
-            <div className="icon-stat-num">{classes.length}</div>
-            <div className="icon-stat-label">Classes in the school</div>
+            <div>
+              <div className="t-stat-num">{myClassNames.length}</div>
+              <div className="t-stat-label">Your classes</div>
+            </div>
           </div>
-          <div className="icon-stat-card">
-            <div className="icon-badge icon-badge-amber"><BookOpen size={18} /></div>
-            <div className="icon-stat-num">{assignments.length}</div>
-            <div className="icon-stat-label">Assignments you've posted</div>
+          <div className="t-stat">
+            <div className="icon-badge icon-badge-green"><BookOpen size={18} /></div>
+            <div>
+              <div className="t-stat-num">{assignments.length}</div>
+              <div className="t-stat-label">Assignments posted</div>
+            </div>
+          </div>
+          <div className="t-stat">
+            <div className="icon-badge icon-badge-red"><CalendarDays size={18} /></div>
+            <div>
+              <div className="t-stat-num">{dueThisWeek}</div>
+              <div className="t-stat-label">Due in 7 days</div>
+            </div>
           </div>
         </div>
 
+        {/* Quick actions */}
+        <h2 className="t-section-title">Quick actions</h2>
+        <div className="t-actions">
+          <Link href="/teacher/attendance" className="t-action">
+            <div className="icon-badge icon-badge-green"><ClipboardCheck size={22} /></div>
+            <div>
+              <div className="t-action-title">Mark Attendance</div>
+              <div className="t-action-desc">Take attendance for any class</div>
+            </div>
+            <ChevronRight size={18} className="t-action-arrow" />
+          </Link>
+          <Link href="/teacher/assignments/new" className="t-action">
+            <div className="icon-badge icon-badge-amber"><BookOpen size={22} /></div>
+            <div>
+              <div className="t-action-title">Post Assignment</div>
+              <div className="t-action-desc">Share homework with a class</div>
+            </div>
+            <ChevronRight size={18} className="t-action-arrow" />
+          </Link>
+          <Link href="/teacher/exams/new" className="t-action">
+            <div className="icon-badge icon-badge-blue"><Award size={22} /></div>
+            <div>
+              <div className="t-action-title">Enter Exam Results</div>
+              <div className="t-action-desc">Record marks for a whole class</div>
+            </div>
+            <ChevronRight size={18} className="t-action-arrow" />
+          </Link>
+        </div>
+
+        {/* Today + Notices */}
+        <div className="t-grid">
+          <div className="portal-panel">
+            <h2>Today&apos;s Classes &mdash; {todayName}</h2>
+            {todaysPeriods.length === 0 ? (
+              <div className="t-empty">
+                <Coffee size={28} />
+                {timetable.length === 0
+                  ? "Your timetable hasn't been set up yet. Ask the admin to add it."
+                  : todayName === "Sunday"
+                  ? "No classes today. Enjoy your day off!"
+                  : "No classes scheduled for you today."}
+              </div>
+            ) : (
+              todaysPeriods.map((p) => (
+                <div className="t-period" key={p.id}>
+                  <div className="t-period-no">{p.period_number}</div>
+                  <div>
+                    <div className="t-period-subject">{p.subject}</div>
+                    <div className="t-period-class">Class {p.classes?.name || "—"}</div>
+                  </div>
+                  <Link href="/teacher/attendance" className="auth-link" style={{ marginLeft: "auto" }}>
+                    Attendance
+                  </Link>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="portal-panel">
+            <h2>
+              <Bell size={16} style={{ verticalAlign: "-2px", marginRight: 6 }} />
+              Notices
+            </h2>
+            {notices.length === 0 ? (
+              <div className="t-empty">No notices posted yet.</div>
+            ) : (
+              notices.map((n) => (
+                <div className="t-notice" key={n.id}>
+                  <div className="t-notice-title">{n.title}</div>
+                  <div className="t-notice-date">{new Date(n.created_at).toLocaleDateString("en-GB")}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Your classes */}
         <div className="portal-panel">
-          <h2>Take Attendance</h2>
-          <p>Mark attendance for any class, for today or a past date.</p>
-          <Link href="/teacher/attendance" className="btn btn-primary">Mark Attendance</Link>
+          <h2>Your Classes</h2>
+          {myClassNames.length === 0 ? (
+            <p>No classes assigned to you yet &mdash; ask the admin to add your timetable.</p>
+          ) : (
+            <div className="t-class-chips">
+              {myClassNames.map((name) => (
+                <span className="t-class-chip" key={name}>Class {name}</span>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* Assignments */}
         <div className="portal-panel">
-          <h2>Assignments &amp; Exams</h2>
-          <p>Post homework for a class, or enter exam marks for a whole class at once.</p>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            <Link href="/teacher/assignments/new" className="btn btn-outline">Post Assignment</Link>
-            <Link href="/teacher/exams/new" className="btn btn-outline">Enter Exam Results</Link>
-          </div>
+          <h2>Recent Assignments</h2>
+          {recentAssignments.length === 0 ? (
+            <p>You haven&apos;t posted any assignments yet.</p>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table className="data-table">
+                <thead>
+                  <tr><th>Class</th><th>Subject</th><th>Title</th><th>Due</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  {recentAssignments.map((a) => {
+                    const closed = a.due_date < todayISO;
+                    const soon = !closed && a.due_date <= soonISO;
+                    return (
+                      <tr key={a.id}>
+                        <td>{a.classes?.name}</td>
+                        <td>{a.subject}</td>
+                        <td>{a.title}</td>
+                        <td>{a.due_date}</td>
+                        <td>
+                          <span className={`pill ${closed ? "pill-gray" : soon ? "pill-amber" : "pill-green"}`}>
+                            {closed ? "Closed" : soon ? "Due soon" : "Open"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
+        {/* Weekly timetable */}
         <div className="portal-panel">
           <h2>Your Weekly Timetable</h2>
           <TimetableGrid entries={timetable} showTeacher={false} showClass />
-        </div>
-
-        <div className="portal-panel">
-          <h2>Classes</h2>
-          {classes.length === 0 ? <p>No classes set up yet &mdash; ask the admin to add them.</p> : (
-            <table className="data-table">
-              <thead><tr><th>Grade</th><th>Section</th></tr></thead>
-              <tbody>
-                {classes.map((c) => (
-                  <tr key={c.id}><td>{c.grade}</td><td>{c.section}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        <div className="portal-panel">
-          <h2>Your Assignments</h2>
-          {assignments.length === 0 ? <p>You haven't posted any assignments yet.</p> : (
-            <table className="data-table">
-              <thead><tr><th>Class</th><th>Subject</th><th>Title</th><th>Due</th></tr></thead>
-              <tbody>
-                {assignments.map((a) => (
-                  <tr key={a.id}><td>{a.classes?.name}</td><td>{a.subject}</td><td>{a.title}</td><td>{a.due_date}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-        </div>
-
-        <div className="portal-panel">
-          <h2>Notices</h2>
-          {notices.length === 0 ? <p>No notices posted yet.</p> : (
-            <table className="data-table">
-              <thead><tr><th>Date</th><th>Notice</th></tr></thead>
-              <tbody>
-                {notices.map((n) => (
-                  <tr key={n.id}><td>{new Date(n.created_at).toLocaleDateString()}</td><td>{n.title}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </div>
       </div>
     </div>

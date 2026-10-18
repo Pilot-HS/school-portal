@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -24,16 +25,24 @@ export default function PortalNav({
     router.push("/login");
   }
 
+  const initial = (fullName || "?").trim().charAt(0).toUpperCase();
+
   return (
     <div className="topnav">
-      <div>
-        <div className="brand">GBHS Pilot Dadu</div>
-        <div className="role-tag">{ROLE_LABELS[role] || "Portal"}</div>
+      <div className="nav-left">
+        <div className="nav-mark">G</div>
+        <div>
+          <div className="brand">GBHS Pilot Dadu</div>
+          <div className="role-tag">{ROLE_LABELS[role] || "Portal"}</div>
+        </div>
       </div>
       <div className="right">
-        <span>{fullName}</span>
-        <button className="btn btn-outline" style={{ borderColor: "#fff", color: "#fff", padding: "6px 14px" }} onClick={handleLogout}>
-          Log out
+        <div className="nav-user">
+          <div className="nav-avatar" aria-hidden="true">{initial}</div>
+          <span className="nav-name">{fullName}</span>
+        </div>
+        <button className="btn btn-logout" onClick={handleLogout} aria-label="Log out">
+          <LogOut size={15} /> <span>Log out</span>
         </button>
       </div>
     </div>
