@@ -445,3 +445,237 @@ body:has(.auth-page) .demo-banner { display: none; }
   .auth-mark { width: 44px; height: 44px; font-size: 1.4rem; margin-bottom: 14px; }
   .auth-panel { padding: 28px 20px 40px; align-items: flex-start; }
 }
+
+/* =====================================================================
+   TEACHER AREA — menus, attendance, tests, students, forms
+   ===================================================================== */
+.t-shell { min-height: 60vh; }
+.t-page-title { font-size: 1.45rem; margin: 0 0 16px; }
+.t-back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--accent-2); font-weight: 600; text-decoration: none; }
+.t-back:hover { text-decoration: underline; }
+.t-row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.t-hint { font-size: 0.78rem; color: var(--muted); margin: 12px 0 0; }
+.t-textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); background: var(--surface);
+  font-size: 0.9rem; font-family: inherit; border-radius: 8px; resize: vertical;
+}
+.t-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201, 153, 46, 0.2); }
+
+/* Desktop tab strip */
+.t-tabs {
+  display: flex; gap: 4px; padding: 0 24px; overflow-x: auto;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  position: sticky; top: 66px; z-index: 25;
+}
+.t-tabs a {
+  display: inline-flex; align-items: center; gap: 7px; padding: 13px 14px;
+  font-size: 0.85rem; font-weight: 600; color: var(--slate); white-space: nowrap;
+  border-bottom: 3px solid transparent; text-decoration: none;
+}
+.t-tabs a:hover { color: var(--ink); background: #f6f7f4; }
+.t-tabs a.active { color: var(--ink); border-bottom-color: var(--accent); }
+
+/* Phone bottom menu */
+.t-bottom { display: none; }
+.t-sheet-backdrop { display: none; }
+@media (max-width: 760px) {
+  .t-tabs { display: none; }
+  .t-shell { padding-bottom: 84px; }
+  .t-bottom {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    background: var(--surface); border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 16px rgba(22, 58, 43, 0.1);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .t-bottom a, .t-bottom button {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    padding: 9px 2px 8px; font-size: 0.68rem; font-weight: 600; color: var(--muted);
+    background: none; border: none; cursor: pointer; text-decoration: none; font-family: inherit;
+  }
+  .t-bottom .active { color: var(--ink); }
+  .t-bottom .active svg { color: var(--accent-2); }
+  .t-sheet-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 45; background: rgba(22, 58, 43, 0.4);
+  }
+  .t-sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface);
+    border-radius: 18px 18px 0 0; padding: 16px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+  }
+  .t-sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .t-sheet-link {
+    display: flex; align-items: center; gap: 12px; padding: 14px 10px; font-size: 0.95rem; font-weight: 600;
+    color: var(--ink); border-radius: 10px; text-decoration: none;
+  }
+  .t-sheet-link.active, .t-sheet-link:hover { background: var(--accent-tint); }
+  .t-sheet-link svg { color: var(--accent-2); }
+}
+
+/* Forms */
+.t-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.t-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 14px; }
+@media (max-width: 600px) {
+  .t-form-row, .t-form-grid { grid-template-columns: 1fr; }
+  .form-field input, .form-field select, .t-textarea { font-size: 16px; } /* stops phone zoom on focus */
+}
+
+/* Segmented switch (Mark / History) */
+.t-segment { display: inline-flex; background: #e9ece7; border-radius: 10px; padding: 3px; margin-bottom: 16px; }
+.t-segment button {
+  border: none; background: none; padding: 8px 18px; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+  color: var(--slate); cursor: pointer; font-family: inherit;
+}
+.t-segment button.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+
+/* Attendance + marks rows */
+.att-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.att-row:last-child { border-bottom: none; }
+.att-roll {
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px; background: var(--accent-tint); color: var(--accent-2);
+  font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; justify-content: center;
+}
+.att-name { flex: 1; min-width: 0; font-size: 0.92rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.att-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.att-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  min-width: 52px; height: 40px; padding: 0 10px; border-radius: 10px; font-size: 0.8rem; font-weight: 700;
+  background: #f1f3ef; color: var(--muted); border: 1px solid var(--border); cursor: pointer; font-family: inherit;
+}
+.att-btn.present.active { background: #2f6b4f; color: #fff; border-color: #2f6b4f; }
+.att-btn.absent.active { background: #c0453f; color: #fff; border-color: #c0453f; }
+.att-btn.leave.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+@media (max-width: 480px) {
+  .att-btn { min-width: 44px; padding: 0 8px; }
+  .att-btn span { display: none; }
+  .att-name { font-size: 0.86rem; }
+}
+.att-bar {
+  position: sticky; bottom: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-md); padding: 12px 16px; margin-bottom: 14px;
+}
+.att-counts { display: flex; gap: 6px; flex-wrap: wrap; }
+@media (max-width: 760px) { .att-bar { bottom: 70px; } }
+
+.mark-box { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.mark-box input { width: 84px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; text-align: center; font-family: inherit; }
+.mark-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201, 153, 46, 0.2); }
+.mark-box input.bad { border-color: #c0453f; background: #fdf0ef; }
+.mark-pct { width: 52px; font-size: 0.75rem; color: var(--muted); }
+
+/* Lists of tests / assignments */
+.t-list { display: grid; gap: 12px; }
+.t-test-card {
+  display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 14px 16px; text-decoration: none; color: inherit;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+a.t-test-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--accent); }
+.t-test-name { font-weight: 700; font-size: 0.98rem; }
+.t-test-meta { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+.t-icon-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.t-icon-btn {
+  width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--slate); display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.t-icon-btn:hover { background: #f1f3ef; }
+.t-icon-btn.danger { color: #a13636; }
+.t-icon-btn.danger:hover { background: #fbe7e7; }
+
+/* Profile info */
+.t-info { display: grid; gap: 0; }
+.t-info-row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+.t-info-row:last-child { border-bottom: none; }
+.t-info-row span { color: var(--muted); }
+.t-info-row strong { text-align: right; word-break: break-word; }
+
+/* Dashboard quick actions: 2 per row on phones */
+@media (max-width: 900px) { .t-actions { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) {
+  .t-actions { gap: 10px; }
+  .t-action { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
+  .t-action-arrow, .t-action-desc { display: none; }
+}
+
+/* =====================================================================
+   ADMIN AREA + STUDENT / PARENT PORTALS
+   ===================================================================== */
+/* Sidebar: grouped, sticky, scrolls on its own */
+.admin-sidebar {
+  position: sticky;
+  top: 66px;
+  max-height: calc(100vh - 66px);
+  overflow-y: auto;
+  min-height: 0;
+  background: linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
+}
+.admin-group-title {
+  padding: 16px 22px 6px;
+  font-size: 0.68rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #8fb0a0;
+  font-weight: 700;
+}
+.admin-sidebar a { transition: background 0.15s, color 0.15s; }
+.admin-content { min-width: 0; }
+.admin-attention {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--border); text-decoration: none; color: var(--ink); font-size: 0.92rem; font-weight: 600;
+}
+.admin-attention:last-child { border-bottom: none; }
+.admin-attention:hover { color: var(--accent-2); }
+
+/* Tablet: keep the vertical sidebar, just narrower (replaces the old top strip) */
+@media (max-width: 900px) {
+  .admin-shell { flex-direction: row; }
+  .admin-sidebar { width: 190px; display: block; overflow-y: auto; padding: 8px 0 18px; }
+  .admin-sidebar a { padding: 10px 16px; white-space: normal; border-bottom: none; border-left: 3px solid transparent; }
+  .admin-sidebar a.active { border-bottom: none; border-left-color: var(--accent); }
+}
+/* Phone: sidebar becomes the bottom menu */
+@media (max-width: 760px) {
+  .admin-sidebar { display: none; }
+  .admin-content { padding: 18px 14px 96px; }
+  .admin-content .portal-panel { overflow-x: auto; }
+  .admin-content .portal-cards { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Bottom sheet extras (shared by admin + teacher menus) */
+.t-sheet { max-height: 82vh; overflow-y: auto; }
+.t-sheet-group {
+  padding: 12px 10px 4px; font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700;
+}
+
+/* Student / parent portal */
+.sv-tabs {
+  display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 12px; margin-bottom: 8px;
+  position: sticky; top: 66px; z-index: 20; background: var(--bg);
+  scrollbar-width: none;
+}
+.sv-tabs::-webkit-scrollbar { display: none; }
+.sv-tabs button {
+  flex-shrink: 0; border: 1px solid var(--border); background: var(--surface); color: var(--slate);
+  padding: 9px 16px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.sv-tabs button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.sv-link { background: none; border: none; cursor: pointer; font-family: inherit; }
+.sv-children { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 18px; padding-bottom: 4px; }
+.sv-children button {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px 8px 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: 0.88rem; font-weight: 600;
+  color: var(--slate); cursor: pointer; font-family: inherit;
+}
+.sv-children button.active { border-color: var(--accent); background: var(--accent-tint); color: var(--ink); }
+.sv-child-avatar {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 0.8rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Printing: hide the new menus too */
+@media print {
+  .t-bottom, .t-tabs, .t-sheet-backdrop, .sv-tabs { display: none !important; }
+}
+@media (max-width: 600px) { .sv-tabs { top: 58px; } }
