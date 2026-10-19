@@ -687,3 +687,14 @@ a.t-test-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md);
   font-size: 16px; font-family: inherit; background: var(--surface);
 }
 .admin-search input[type="search"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201, 153, 46, 0.2); }
+
+/* Student import */
+.import-drop {
+  display: flex; align-items: center; gap: 12px; padding: 22px 18px; border: 2px dashed var(--border);
+  border-radius: var(--radius); background: #fafbf8; color: var(--slate); cursor: pointer; font-weight: 600; font-size: 0.92rem;
+}
+.import-drop:hover { border-color: var(--accent); background: var(--accent-tint); }
+.import-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.import-drop:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201, 153, 46, 0.2); }
+.import-drop span { word-break: break-word; }
+.import-done { display: flex; align-items: center; gap: 14px; color: var(--success); }

@@ -130,6 +130,7 @@ export default function StudentsListPage() {
           <Link href="/admin/houses" className="btn btn-outline">Houses</Link>
           <Link href="/admin/students/birthdays" className="btn btn-outline">Birthdays</Link>
           <Link href="/admin/students/promote" className="btn btn-outline">Promote Students</Link>
+          <Link href="/admin/students/import" className="btn btn-outline">Import from File</Link>
           <Link href="/admin/students/new" className="btn btn-primary">Add Student</Link>
         </div>
       </div>
