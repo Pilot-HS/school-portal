@@ -679,3 +679,11 @@ a.t-test-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md);
   .t-bottom, .t-tabs, .t-sheet-backdrop, .sv-tabs { display: none !important; }
 }
 @media (max-width: 600px) { .sv-tabs { top: 58px; } }
+
+/* Admin search box */
+.admin-search { padding-bottom: 14px; }
+.admin-search input[type="search"] {
+  width: 100%; padding: 12px 44px 12px 14px; border: 1px solid var(--border); border-radius: 10px;
+  font-size: 16px; font-family: inherit; background: var(--surface);
+}
+.admin-search input[type="search"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201, 153, 46, 0.2); }

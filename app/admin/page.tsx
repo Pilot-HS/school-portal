@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -17,10 +17,12 @@ import {
   ChevronRight,
   Bell,
   CheckCircle2,
+  Search,
+  Trophy,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import AdminLayout from "@/components/AdminLayout";
-import BarChart from "@/components/BarChart";
+import LineChart from "@/components/LineChart";
 import DonutChart from "@/components/DonutChart";
 import { localISODate, formatDate } from "@/lib/teacherUi";
 
@@ -45,6 +47,12 @@ export default function AdminPage() {
   const [pendingLeave, setPendingLeave] = useState(0);
   const [notices, setNotices] = useState<any[]>([]);
   const [days, setDays] = useState<DayStat[]>([]);
+  const [topStudents, setTopStudents] = useState<any[]>([]);
+  const [topExam, setTopExam] = useState("");
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [hits, setHits] = useState<{ students: any[]; teachers: any[] } | null>(null);
+  const searchCounter = useRef(0);
 
   async function load() {
     setLoading(true);
@@ -71,7 +79,7 @@ export default function AdminPage() {
 
       // Last 7 calendar days, counted with lightweight "count only" requests
       const dateList: string[] = [];
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < 10; i++) {
         const d = new Date();
         d.setDate(d.getDate() - i);
         dateList.push(localISODate(d));
@@ -120,6 +128,65 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Top students of the most recent exam (loads after the page is already showing)
+  useEffect(() => {
+    (async () => {
+      const { data: exams } = await supabase.from("exams").select("id, name").order("created_at", { ascending: false }).limit(1);
+      const exam = exams && exams[0];
+      if (!exam) return;
+      const { data: rows } = await supabase
+        .from("exam_results")
+        .select("student_id, marks_obtained, total_marks")
+        .eq("exam_id", exam.id)
+        .limit(1000);
+      if (!rows || rows.length === 0) return;
+      const totals: Record<string, { got: number; max: number }> = {};
+      rows.forEach((r: any) => {
+        if (!totals[r.student_id]) totals[r.student_id] = { got: 0, max: 0 };
+        totals[r.student_id].got += Number(r.marks_obtained) || 0;
+        totals[r.student_id].max += Number(r.total_marks) || 0;
+      });
+      const ranked = Object.entries(totals)
+        .filter(([, t]) => t.max > 0)
+        .map(([id, t]) => ({ id, pct: Math.round((t.got / t.max) * 100) }))
+        .sort((a, b) => b.pct - a.pct)
+        .slice(0, 5);
+      if (ranked.length === 0) return;
+      const { data: names } = await supabase
+        .from("students")
+        .select("id, full_name, classes(name)")
+        .in("id", ranked.map((r) => r.id));
+      const byId: Record<string, any> = {};
+      (names || []).forEach((n: any) => {
+        byId[n.id] = n;
+      });
+      setTopExam(exam.name);
+      setTopStudents(ranked.map((r) => ({ ...r, name: byId[r.id]?.full_name || "Student", className: byId[r.id]?.classes?.name || "" })));
+    })();
+  }, []);
+
+  // Search students and teachers by name
+  useEffect(() => {
+    const q = query.trim().replace(/[%_,()]/g, " ").trim();
+    if (q.length < 2) {
+      setHits(null);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const mine = ++searchCounter.current;
+    const timer = setTimeout(async () => {
+      const [stu, tea] = await Promise.all([
+        supabase.from("students").select("id, full_name, roll_no, classes(name)").ilike("full_name", `%${q}%`).limit(5),
+        supabase.from("teachers").select("id, full_name, subject").ilike("full_name", `%${q}%`).limit(5),
+      ]);
+      if (mine !== searchCounter.current) return;
+      setHits({ students: stu.data || [], teachers: tea.data || [] });
+      setSearching(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   if (loading) {
     return (
       <div className="skeleton-wrap" aria-busy="true" aria-label="Loading dashboard">
@@ -140,7 +207,7 @@ export default function AdminPage() {
   const chartData = days
     .filter((d) => d.total > 0)
     .sort((a, b) => (a.date < b.date ? -1 : 1))
-    .slice(-5)
+    .slice(-7)
     .map((d) => ({
       label: new Date(`${d.date}T00:00:00`).toLocaleDateString("en-GB", { weekday: "short" }),
       value: Math.round((d.present / d.total) * 100),
@@ -179,6 +246,52 @@ export default function AdminPage() {
           <button className="btn btn-outline" onClick={load}>Try again</button>
         </div>
       )}
+
+      <div className="portal-panel admin-search">
+        <div className="auth-input-wrap">
+          <input
+            type="search"
+            aria-label="Search students and teachers"
+            placeholder="Search a student or teacher by name…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <span className="auth-toggle" style={{ pointerEvents: "none" }}><Search size={17} /></span>
+        </div>
+        {searching && <p className="t-hint">Searching…</p>}
+        {hits && !searching && (
+          hits.students.length + hits.teachers.length === 0 ? (
+            <p className="t-hint">No student or teacher found for &ldquo;{query.trim()}&rdquo;.</p>
+          ) : (
+            <div style={{ marginTop: 8 }}>
+              {hits.students.map((s) => (
+                <Link key={s.id} href={`/admin/students/${s.id}/edit`} className="admin-attention">
+                  <span className="sv-child-avatar">{String(s.full_name).charAt(0).toUpperCase()}</span>
+                  <span>
+                    {s.full_name}
+                    <span className="t-test-meta" style={{ display: "block", fontWeight: 400 }}>
+                      Student{s.classes?.name ? ` · Class ${s.classes.name}` : ""}{s.roll_no ? ` · Roll ${s.roll_no}` : ""}
+                    </span>
+                  </span>
+                  <ChevronRight size={18} className="t-action-arrow" />
+                </Link>
+              ))}
+              {hits.teachers.map((t) => (
+                <Link key={t.id} href={`/admin/teachers/${t.id}/edit`} className="admin-attention">
+                  <span className="sv-child-avatar" style={{ background: "var(--accent-2)" }}>{String(t.full_name).charAt(0).toUpperCase()}</span>
+                  <span>
+                    {t.full_name}
+                    <span className="t-test-meta" style={{ display: "block", fontWeight: 400 }}>
+                      Teacher{t.subject ? ` · ${t.subject}` : ""}
+                    </span>
+                  </span>
+                  <ChevronRight size={18} className="t-action-arrow" />
+                </Link>
+              ))}
+            </div>
+          )
+        )}
+      </div>
 
       <div className="t-stats">
         <div className="t-stat">
@@ -236,8 +349,8 @@ export default function AdminPage() {
 
       <div className="chart-row">
         <div className="portal-panel" style={{ marginBottom: 0 }}>
-          <h2>Attendance Rate &mdash; Recent Days</h2>
-          {chartData.length === 0 ? <p>No attendance data in the last 7 days.</p> : <BarChart data={chartData} />}
+          <h2>Attendance Trend</h2>
+          {chartData.length === 0 ? <p>No attendance data in the last 10 days.</p> : <LineChart data={chartData} />}
         </div>
         <div className="portal-panel" style={{ marginBottom: 0 }}>
           <h2>Fee Collection</h2>
@@ -254,21 +367,41 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <div className="portal-panel" style={{ marginTop: 22 }}>
-        <div className="t-row-between">
-          <h2 style={{ margin: 0 }}><Bell size={16} style={{ verticalAlign: "-2px", marginRight: 6 }} />Latest notices</h2>
-          <Link href="/admin/notices" className="auth-link">View all</Link>
+      <div className="t-grid" style={{ marginTop: 22 }}>
+        <div className="portal-panel">
+          <h2><Trophy size={16} style={{ verticalAlign: "-2px", marginRight: 6 }} />Top students{topExam ? ` — ${topExam}` : ""}</h2>
+          {topStudents.length === 0 ? (
+            <div className="t-empty">No exam results have been entered yet.</div>
+          ) : (
+            topStudents.map((t, i) => (
+              <div className="t-period" key={t.id}>
+                <div className="t-period-no">{i + 1}</div>
+                <div>
+                  <div className="t-period-subject">{t.name}</div>
+                  <div className="t-period-class">{t.className ? `Class ${t.className}` : "—"}</div>
+                </div>
+                <span className="pill pill-green" style={{ marginLeft: "auto" }}>{t.pct}%</span>
+              </div>
+            ))
+          )}
         </div>
-        {notices.length === 0 ? (
-          <div className="t-empty">No notices posted yet.</div>
-        ) : (
-          notices.map((n) => (
-            <div className="t-notice" key={n.id}>
-              <div className="t-notice-title">{n.title}</div>
-              <div className="t-notice-date">{formatDate(n.created_at)}</div>
-            </div>
-          ))
-        )}
+
+        <div className="portal-panel">
+          <div className="t-row-between">
+            <h2 style={{ margin: 0 }}><Bell size={16} style={{ verticalAlign: "-2px", marginRight: 6 }} />Latest notices</h2>
+            <Link href="/admin/notices" className="auth-link">View all</Link>
+          </div>
+          {notices.length === 0 ? (
+            <div className="t-empty">No notices posted yet.</div>
+          ) : (
+            notices.map((n) => (
+              <div className="t-notice" key={n.id}>
+                <div className="t-notice-title">{n.title}</div>
+                <div className="t-notice-date">{formatDate(n.created_at)}</div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </AdminLayout>
   );
