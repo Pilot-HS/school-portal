@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
+import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 
 // Returns the subject list (for the "new test" form) and the latest tests/exams.
 export async function GET(request: Request) {
@@ -10,11 +11,19 @@ export async function GET(request: Request) {
 
   const classId = new URL(request.url).searchParams.get("class_id");
 
+  let allowedIds: string[] | null = null;
+  if (auth.role === "teacher") {
+    const mine = (await getAllowedClassIds(auth.userId)).classIds;
+    if (classId && !mine.includes(classId)) return noAccessResponse();
+    allowedIds = mine;
+  }
+
   let testQuery = supabaseAdmin
     .from("exam_subjects")
     .select("id, exam_id, class_id, subject_id, max_marks, exams(name, term, start_date, created_at), classes(name, grade, section), subjects(name)")
     .limit(300);
   if (classId) testQuery = testQuery.eq("class_id", classId);
+  else if (allowedIds) testQuery = testQuery.in("class_id", allowedIds.length ? allowedIds : ["none"]);
 
   const [subjectsRes, testsRes] = await Promise.all([
     supabaseAdmin.from("subjects").select("id, name").order("name"),

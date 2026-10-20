@@ -6,6 +6,7 @@ import { GraduationCap } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
 import StudentView from "@/components/StudentView";
+import ChangePasswordPanel from "@/components/ChangePasswordPanel";
 
 export default function ParentPage() {
   const router = useRouter();
@@ -77,7 +78,7 @@ export default function ParentPage() {
           </div>
         ) : (
           <>
-            <div className="t-hero">
+            <div className="t-hero no-print">
               <div className="t-hero-date">Parent Portal</div>
               <h1>Welcome, {fullName}</h1>
               <div style={{ position: "relative", zIndex: 1 }}>
@@ -88,7 +89,7 @@ export default function ParentPage() {
             </div>
 
             {children.length > 1 && (
-              <div className="sv-children" role="tablist" aria-label="Choose a child">
+              <div className="sv-children no-print" role="tablist" aria-label="Choose a child">
                 {children.map((c) => (
                   <button key={c.id} role="tab" aria-selected={c.id === child.id} className={c.id === child.id ? "active" : ""} onClick={() => setSelectedId(c.id)}>
                     <span className="sv-child-avatar">{String(c.full_name).charAt(0).toUpperCase()}</span>
@@ -99,6 +100,7 @@ export default function ParentPage() {
             )}
 
             <StudentView key={child.id} student={child} audience="parents" />
+            <ChangePasswordPanel />
           </>
         )}
       </div>

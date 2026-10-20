@@ -67,11 +67,14 @@ const GROUPS: { title: string | null; items: NavItem[] }[] = [
       { key: "notices", href: "/admin/notices", label: "Notices", icon: Megaphone },
       { key: "reports", href: "/admin/reports", label: "Reports", icon: FileBarChart },
       { key: "accounts", href: "/admin/create-user", label: "Accounts", icon: UserPlus },
+      { key: "bulk-logins", href: "/admin/bulk-logins", label: "Bulk Logins", icon: UserPlus, extra: true },
+      { key: "report-cards", href: "/admin/report-cards", label: "Report Cards", icon: Award, extra: true },
     ],
   },
   {
     title: "Staff & Setup",
     items: [
+      { key: "cover", href: "/admin/cover", label: "Substitute Cover", icon: UserCheck, extra: true },
       { key: "leave", href: "/admin/leave-requests", label: "Leave Requests", icon: CalendarOff, extra: true },
       { key: "staff-attendance", href: "/admin/staff-attendance", label: "Staff Attendance", icon: Clock, extra: true },
       { key: "subjects", href: "/admin/subjects", label: "Subjects", icon: Library, extra: true },

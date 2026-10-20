@@ -15,15 +15,19 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import TimetableGrid from "@/components/TimetableGrid";
+import ReportCard from "@/components/ReportCard";
+import { teacherApi } from "@/lib/teacherApi";
+import { Printer } from "lucide-react";
 import { localISODate, formatDate } from "@/lib/teacherUi";
 
-type TabKey = "overview" | "attendance" | "homework" | "results" | "fees" | "timetable";
+type TabKey = "overview" | "attendance" | "homework" | "results" | "report" | "fees" | "timetable";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "overview", label: "Overview" },
   { key: "attendance", label: "Attendance" },
   { key: "homework", label: "Homework" },
   { key: "results", label: "Results" },
+  { key: "report", label: "Report Card" },
   { key: "fees", label: "Fees" },
   { key: "timetable", label: "Timetable" },
 ];
@@ -48,6 +52,8 @@ export default function StudentView({
   const [fees, setFees] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
   const [notices, setNotices] = useState<any[]>([]);
+  const [card, setCard] = useState<any>(null);
+  const [cardState, setCardState] = useState<"idle" | "loading" | "error">("idle");
 
   // Notices are the same for every child, so they load once
   useEffect(() => {
@@ -103,6 +109,20 @@ export default function StudentView({
       cancelled = true;
     };
   }, [student.id, student.class_id]);
+
+  // The report card is fetched the first time its tab is opened
+  useEffect(() => {
+    if (tab !== "report" || card || cardState === "loading") return;
+    (async () => {
+      setCardState("loading");
+      const { ok, data } = await teacherApi(`/api/report-card?student_id=${student.id}`);
+      if (ok && data.students?.[0]) {
+        setCard(data);
+        setCardState("idle");
+      } else setCardState("error");
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   if (loading) {
     return (
@@ -349,6 +369,23 @@ export default function StudentView({
               </div>
             );
           })
+        )
+      )}
+
+      {tab === "report" && (
+        cardState === "error" ? (
+          <div className="t-error" role="alert"><span>The report card couldn&apos;t be loaded. Please try again later.</span></div>
+        ) : !card ? (
+          <div className="skeleton" style={{ height: 300 }} />
+        ) : (
+          <>
+            <div className="no-print" style={{ marginBottom: 12 }}>
+              <button className="btn btn-primary" onClick={() => window.print()}><Printer size={15} /> Print / Save as PDF</button>
+            </div>
+            <div className="rc-preview">
+              <ReportCard student={card.students[0]} bands={card.bands} yearLabel={card.year_label} />
+            </div>
+          </>
         )
       )}
 

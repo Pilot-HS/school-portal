@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
+import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 
 // Deletes a test that has no marks yet (e.g. created by mistake).
 export async function POST(request: Request) {
@@ -13,10 +14,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Test id is required" }, { status: 400 });
   }
 
-  const { data: test } = await supabaseAdmin.from("exam_subjects").select("id, exam_id, subject_id").eq("id", id).maybeSingle();
+  const { data: test } = await supabaseAdmin.from("exam_subjects").select("id, exam_id, subject_id, class_id").eq("id", id).maybeSingle();
   if (!test) {
     return NextResponse.json({ error: "Test not found" }, { status: 404 });
   }
+
+  if (!(await canAccessClass(auth, test.class_id))) return noAccessResponse();
 
   const { count } = await supabaseAdmin
     .from("exam_results")

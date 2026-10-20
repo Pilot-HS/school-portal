@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
+import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 
 export async function POST(request: Request) {
   const auth = await requireRole(request, ["teacher", "admin"]);
@@ -13,6 +14,8 @@ export async function POST(request: Request) {
   if (!exam_id || !class_id || !subject_id || !Array.isArray(records) || records.length === 0) {
     return NextResponse.json({ error: "Exam, class, subject, and at least one student are required" }, { status: 400 });
   }
+
+  if (!(await canAccessClass(auth, class_id))) return noAccessResponse();
 
   const [{ data: exam }, { data: subject }, { data: examSubject }] = await Promise.all([
     supabaseAdmin.from("exams").select("*").eq("id", exam_id).single(),

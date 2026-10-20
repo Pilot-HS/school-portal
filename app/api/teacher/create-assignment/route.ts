@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
+import { canAccessClass, noAccessResponse } from "@/lib/teacherAccess";
 
 export async function POST(request: Request) {
   const auth = await requireRole(request, ["teacher", "admin"]);
@@ -13,6 +14,8 @@ export async function POST(request: Request) {
   if (!class_id || !subject || !title) {
     return NextResponse.json({ error: "Class, subject, and title are required" }, { status: 400 });
   }
+
+  if (!(await canAccessClass(auth, class_id))) return noAccessResponse();
 
   let createdBy: string | null = null;
   if (auth.role === "teacher") {

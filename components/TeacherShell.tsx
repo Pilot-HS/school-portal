@@ -12,11 +12,13 @@ import {
   CalendarOff,
   UserCircle,
   ListChecks,
+  Award,
   MoreHorizontal,
   X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
+import { teacherApi } from "@/lib/teacherApi";
 
 type TeacherContextValue = {
   role: string;
@@ -44,6 +46,7 @@ const TABS = [
   { href: "/teacher/students", label: "Students", icon: Users },
   { href: "/teacher/assignments", label: "Assignments", icon: BookOpen },
   { href: "/teacher/mcq", label: "MCQ & OMR", icon: ListChecks },
+  { href: "/teacher/report-cards", label: "Report Cards", icon: Award },
   { href: "/teacher/leave", label: "Leave", icon: CalendarOff },
   { href: "/teacher/profile", label: "Profile", icon: UserCircle },
 ];
@@ -88,15 +91,24 @@ export default function TeacherShell({ children }: { children: React.ReactNode }
         return;
       }
 
-      const [ttRes, classRes] = await Promise.all([
+      const [ttRes, classRes, accessRes] = await Promise.all([
         teacherRow
           ? supabase.from("timetable_entries").select("*, classes(name)").eq("teacher_id", teacherRow.id)
           : Promise.resolve({ data: [] as any[], error: null }),
         supabase.from("classes").select("*").order("grade"),
+        profile.role === "teacher" ? teacherApi("/api/teacher/my-classes") : Promise.resolve(null),
       ]);
 
       const timetable = ttRes.data || [];
-      const myClassIds = Array.from(new Set(timetable.map((e: any) => e.class_id).filter(Boolean))) as string[];
+      const timetableClassIds = Array.from(new Set(timetable.map((e: any) => e.class_id).filter(Boolean))) as string[];
+      // Teachers work only with their own classes (timetable + any substitute cover the admin has set up)
+      const allClasses = classRes.data || [];
+      let myClassIds = timetableClassIds;
+      let visibleClasses = allClasses;
+      if (profile.role === "teacher") {
+        if (accessRes && accessRes.ok && Array.isArray(accessRes.data.class_ids)) myClassIds = accessRes.data.class_ids;
+        visibleClasses = allClasses.filter((c: any) => myClassIds.includes(String(c.id)));
+      }
 
       setState({
         role: profile.role,
@@ -106,7 +118,7 @@ export default function TeacherShell({ children }: { children: React.ReactNode }
         teacher: teacherRow ? { id: teacherRow.id, subject: teacherRow.subject } : null,
         timetable,
         myClassIds,
-        classes: classRes.data || [],
+        classes: visibleClasses,
       });
     } catch {
       setError("We couldn't load your portal. Please check your internet and try again.");

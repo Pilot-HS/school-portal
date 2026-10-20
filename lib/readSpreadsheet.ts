@@ -288,3 +288,72 @@ export function toStudentRecords(rows: SheetRow[]): { records: StudentImportReco
   }));
   return { records, missing: [] };
 }
+
+
+/* ------------------------------------------------- Teacher import rows -- */
+
+export type TeacherImportRecord = {
+  row: number;
+  full_name: string;
+  employee_number: string;
+  designation: string;
+  subject: string;
+  mobile_number: string;
+  email: string;
+  cnic: string;
+  gender: string;
+  date_of_birth: string;
+  date_of_joining: string;
+};
+
+const TEACHER_ALIASES: Record<keyof Omit<TeacherImportRecord, "row">, string[]> = {
+  full_name: ["fullname", "name", "teachername", "staffname", "nameofteacher"],
+  employee_number: ["employeenumber", "employeeno", "empno", "employeeid", "personnelnumber", "personalnumber"],
+  designation: ["designation", "post", "position"],
+  subject: ["subject", "qualificationsubject", "subjectspecialization"],
+  mobile_number: ["mobilenumber", "mobile", "mobileno", "phone", "phonenumber", "contactnumber"],
+  email: ["email", "emailaddress"],
+  cnic: ["cnic", "cnicnumber", "idcardnumber"],
+  gender: ["gender", "sex"],
+  date_of_birth: ["dateofbirth", "dob", "birthdate"],
+  date_of_joining: ["dateofjoining", "joiningdate", "dateofjoiningschool", "doj"],
+};
+
+export function toTeacherRecords(rows: SheetRow[]): { records: TeacherImportRecord[]; missing: string[] } {
+  const nonEmpty = rows.filter((r) => r.cells.some((c) => c !== ""));
+  if (nonEmpty.length === 0) return { records: [], missing: ["Full Name"] };
+
+  let headerIndex = 0;
+  for (let i = 0; i < Math.min(nonEmpty.length, 10); i++) {
+    if (nonEmpty[i].cells.map(norm).some((k) => TEACHER_ALIASES.full_name.includes(k))) {
+      headerIndex = i;
+      break;
+    }
+  }
+  const headerKeys = nonEmpty[headerIndex].cells.map(norm);
+  const colOf: Partial<Record<keyof typeof TEACHER_ALIASES, number>> = {};
+  (Object.keys(TEACHER_ALIASES) as (keyof typeof TEACHER_ALIASES)[]).forEach((field) => {
+    const idx = headerKeys.findIndex((k) => TEACHER_ALIASES[field].includes(k));
+    if (idx >= 0) colOf[field] = idx;
+  });
+  if (colOf.full_name === undefined) return { records: [], missing: ["Full Name"] };
+
+  const get = (cells: string[], field: keyof typeof TEACHER_ALIASES) => {
+    const idx = colOf[field];
+    return idx === undefined ? "" : (cells[idx] || "").trim();
+  };
+  const records: TeacherImportRecord[] = nonEmpty.slice(headerIndex + 1).map((r) => ({
+    row: r.rowNumber,
+    full_name: get(r.cells, "full_name"),
+    employee_number: get(r.cells, "employee_number"),
+    designation: get(r.cells, "designation"),
+    subject: get(r.cells, "subject"),
+    mobile_number: get(r.cells, "mobile_number"),
+    email: get(r.cells, "email"),
+    cnic: get(r.cells, "cnic"),
+    gender: get(r.cells, "gender"),
+    date_of_birth: get(r.cells, "date_of_birth"),
+    date_of_joining: get(r.cells, "date_of_joining"),
+  }));
+  return { records, missing: [] };
+}

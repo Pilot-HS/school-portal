@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
+import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 
 // One test: details, every student in the class and any marks already saved.
 export async function GET(request: Request) {
@@ -22,6 +23,8 @@ export async function GET(request: Request) {
   if (error || !test) {
     return NextResponse.json({ error: "Test not found" }, { status: 404 });
   }
+
+  if (!(await canAccessClass(auth, test.class_id))) return noAccessResponse();
 
   const { data: students } = await supabaseAdmin
     .from("students")

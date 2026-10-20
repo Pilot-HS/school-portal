@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
+import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 import { fetchAllRows } from "@/lib/fetchAll";
 
 // Students of a class with their attendance over the last 30 days.
@@ -13,6 +14,8 @@ export async function GET(request: Request) {
   if (!classId) {
     return NextResponse.json({ error: "Class is required" }, { status: 400 });
   }
+
+  if (!(await canAccessClass(auth, classId))) return noAccessResponse();
 
   const { data: students, error } = await supabaseAdmin
     .from("students")

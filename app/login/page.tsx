@@ -123,6 +123,10 @@ export default function LoginPage() {
             </p>
           </form>
 
+          <p style={{ marginTop: "18px", marginBottom: 0 }}>
+            <a href="https://pilot-hs.github.io/School-Website/" className="auth-link">&larr; Back to the school website</a>
+          </p>
+
           <p className="auth-foot">
             Don&apos;t have an account? Ask the school office &mdash; accounts are created by the admin, not self-registered.
           </p>

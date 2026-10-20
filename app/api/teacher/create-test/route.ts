@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
+import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 
 // A teacher creates a class test: one exam + one subject-for-a-class entry.
 // It then shows up in the admin's Exams & Results area too.
@@ -20,6 +21,8 @@ export async function POST(request: Request) {
   if (!Number.isFinite(maxMarks) || maxMarks <= 0 || maxMarks > 1000) {
     return NextResponse.json({ error: "Total marks must be a number greater than 0" }, { status: 400 });
   }
+
+  if (!(await canAccessClass(auth, class_id))) return noAccessResponse();
 
   const { data: currentYear } = await supabaseAdmin
     .from("academic_years")

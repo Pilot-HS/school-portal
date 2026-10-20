@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
+import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 
 const VALID_STATUSES = ["present", "absent", "leave"];
 
@@ -19,6 +20,8 @@ export async function POST(request: Request) {
   if (records.some((r: any) => !VALID_STATUSES.includes(r.status))) {
     return NextResponse.json({ error: "Each status must be present, absent or leave" }, { status: 400 });
   }
+
+  if (!(await canAccessClass(auth, class_id))) return noAccessResponse();
 
   // Only accept students who really belong to this class
   const { data: classStudents } = await supabaseAdmin.from("students").select("id").eq("class_id", class_id);

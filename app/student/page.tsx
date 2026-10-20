@@ -6,6 +6,7 @@ import { GraduationCap } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import PortalNav from "@/components/PortalNav";
 import StudentView from "@/components/StudentView";
+import ChangePasswordPanel from "@/components/ChangePasswordPanel";
 
 export default function StudentPage() {
   const router = useRouter();
@@ -73,7 +74,7 @@ export default function StudentPage() {
           </div>
         ) : (
           <>
-            <div className="t-hero">
+            <div className="t-hero no-print">
               <div className="t-hero-date">Student Portal</div>
               <h1>Welcome, {student.full_name}</h1>
               <div style={{ position: "relative", zIndex: 1 }}>
@@ -82,6 +83,7 @@ export default function StudentPage() {
               </div>
             </div>
             <StudentView student={student} audience="students" />
+            <ChangePasswordPanel />
           </>
         )}
       </div>
