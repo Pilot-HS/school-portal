@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/admissionShared";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -139,6 +140,8 @@ export async function POST(request: Request) {
     }
     imported += data.length;
   }
+
+  await logAudit(auth.userId, "imports", `Imported ${imported} staff from a file`, { total: results.length, errors: results.filter((r) => r.status === "error").length });
 
   return NextResponse.json({
     dry_run: false,

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAudit } from "@/lib/audit";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
 import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 
@@ -38,6 +39,8 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  await logAudit(auth.userId, "tests", "Deleted a test that had no marks", { exam_subject_id: id });
 
   // Remove the exam itself only if nothing else is attached to it
   const { count: remaining } = await supabaseAdmin

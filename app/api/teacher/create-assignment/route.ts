@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAudit } from "@/lib/audit";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
 import { canAccessClass, noAccessResponse } from "@/lib/teacherAccess";
 
@@ -37,5 +38,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
+  await logAudit(auth.userId, "assignments", `Posted assignment "${title}" (${subject})`, { class_id, due_date: due_date || null });
   return NextResponse.json({ success: true, assignment: data });
 }

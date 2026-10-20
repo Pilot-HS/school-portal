@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAudit } from "@/lib/audit";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
 
 export async function POST(request: Request) {
@@ -28,5 +29,6 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+  await logAudit(auth.userId, "assignments", "Deleted an assignment", { id });
   return NextResponse.json({ success: true });
 }

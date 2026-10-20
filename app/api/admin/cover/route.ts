@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/admissionShared";
 
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
     created_by: auth.userId,
   });
   if (error) return setupProblem(error) || NextResponse.json({ error: error.message }, { status: 400 });
+  await logAudit(auth.userId, "cover", `Gave substitute cover (${start_date} to ${end_date})`, { teacher_id, class_id });
   return NextResponse.json({ success: true });
 }
 
@@ -77,5 +79,6 @@ export async function DELETE(request: Request) {
   if (!id) return NextResponse.json({ error: "Cover id is required." }, { status: 400 });
   const { error } = await supabaseAdmin.from("teacher_cover").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  await logAudit(auth.userId, "cover", "Removed substitute cover", { id });
   return NextResponse.json({ success: true });
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAudit } from "@/lib/audit";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
 import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 
@@ -42,8 +43,12 @@ export async function POST(request: Request) {
   }
 
   // Only accept students who really belong to this class
-  const { data: classStudents } = await supabaseAdmin.from("students").select("id").eq("class_id", class_id);
+  const { data: classStudents } = await supabaseAdmin.from("students").select("id, full_name").eq("class_id", class_id);
   const allowed = new Set((classStudents || []).map((s: any) => s.id));
+  const nameOf: Record<string, string> = {};
+  (classStudents || []).forEach((s: any) => {
+    nameOf[s.id] = s.full_name;
+  });
   const cleanRecords = records.filter((r: any) => allowed.has(r.student_id));
   if (cleanRecords.length === 0) {
     return NextResponse.json({ error: "None of these students belong to the selected class." }, { status: 400 });
@@ -55,13 +60,15 @@ export async function POST(request: Request) {
   // so a failed save can never wipe out marks that were saved before.
   const { data: existing } = await supabaseAdmin
     .from("exam_results")
-    .select("id, student_id")
+    .select("id, student_id, marks_obtained")
     .eq("exam_id", exam_id)
     .eq("subject_id", subject_id)
     .in("student_id", studentIds);
   const existingByStudent: Record<string, string> = {};
+  const oldMarks: Record<string, number> = {};
   (existing || []).forEach((e: any) => {
     existingByStudent[e.student_id] = e.id;
+    oldMarks[e.student_id] = Number(e.marks_obtained);
   });
 
   const toUpdate = cleanRecords.filter((r: any) => existingByStudent[r.student_id]);
@@ -97,6 +104,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
   }
+
+  const changed = cleanRecords
+    .filter((r: any) => existingByStudent[r.student_id] && oldMarks[r.student_id] !== Number(r.marks_obtained))
+    .map((r: any) => ({ student: nameOf[r.student_id] || r.student_id, from: oldMarks[r.student_id], to: Number(r.marks_obtained) }));
+  await logAudit(
+    auth.userId,
+    "marks",
+    `${changed.length > 0 ? "Changed" : "Entered"} marks: ${exam.name} · ${subject.name} (${cleanRecords.length} students${changed.length ? `, ${changed.length} changed` : ""})`,
+    { exam_id, subject_id, class_id, saved: cleanRecords.length, new: toInsert.length, changed: changed.slice(0, 40) }
+  );
 
   return NextResponse.json({ success: true, count: cleanRecords.length });
 }

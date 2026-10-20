@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAudit } from "@/lib/audit";
 import { randomInt } from "crypto";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/admissionShared";
@@ -123,6 +124,7 @@ export async function POST(request: Request) {
   }
 
   // Anything that failed stays "pending", so don't count it as remaining work for this run
+  if (created.length > 0) await logAudit(auth.userId, "logins", `Created ${created.length} ${kind} logins in bulk`, { failed: failed.length });
   const remaining = Math.max(0, candidates.length - batch.length);
   return NextResponse.json({ created, failed, remaining });
 }

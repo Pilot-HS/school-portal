@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAudit } from "@/lib/audit";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
 import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 
@@ -24,8 +25,12 @@ export async function POST(request: Request) {
   if (!(await canAccessClass(auth, class_id))) return noAccessResponse();
 
   // Only accept students who really belong to this class
-  const { data: classStudents } = await supabaseAdmin.from("students").select("id").eq("class_id", class_id);
+  const { data: classStudents } = await supabaseAdmin.from("students").select("id, full_name").eq("class_id", class_id);
   const allowed = new Set((classStudents || []).map((s: any) => s.id));
+  const nameOf: Record<string, string> = {};
+  (classStudents || []).forEach((s: any) => {
+    nameOf[s.id] = s.full_name;
+  });
   const cleanRecords = records.filter((r: any) => allowed.has(r.student_id));
   if (cleanRecords.length === 0) {
     return NextResponse.json({ error: "None of these students belong to the selected class." }, { status: 400 });
@@ -47,12 +52,14 @@ export async function POST(request: Request) {
   // Nothing is deleted first, so a failed save can't lose earlier attendance.
   const { data: existing } = await supabaseAdmin
     .from("attendance")
-    .select("id, student_id")
+    .select("id, student_id, status")
     .eq("date", date)
     .in("student_id", studentIds);
   const existingByStudent: Record<string, string> = {};
+  const oldStatus: Record<string, string> = {};
   (existing || []).forEach((e: any) => {
     existingByStudent[e.student_id] = e.id;
+    oldStatus[e.student_id] = e.status;
   });
 
   const updateResults = await Promise.all(
@@ -80,6 +87,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
   }
+
+  const changed = cleanRecords
+    .filter((r: any) => oldStatus[r.student_id] && oldStatus[r.student_id] !== r.status)
+    .map((r: any) => ({ student: nameOf[r.student_id] || r.student_id, from: oldStatus[r.student_id], to: r.status }));
+  await logAudit(
+    auth.userId,
+    "attendance",
+    `${changed.length > 0 ? "Edited" : "Marked"} attendance for ${cleanRecords.length} students on ${date}${changed.length ? ` (${changed.length} changed)` : ""}`,
+    { date, class_id, saved: cleanRecords.length, new: rowsToInsert.length, changed: changed.slice(0, 40) }
+  );
 
   return NextResponse.json({ success: true, count: cleanRecords.length });
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/admissionShared";
 import { fetchAllRows } from "@/lib/fetchAll";
@@ -200,6 +201,8 @@ export async function POST(request: Request) {
       data.map((d: any) => ({ student_id: d.id, event_type: "created", details: "Added by spreadsheet import" }))
     );
   }
+
+  await logAudit(auth.userId, "imports", `Imported ${imported} students from a file`, { total: results.length, errors: results.filter((r) => r.status === "error").length });
 
   return NextResponse.json({
     dry_run: false,

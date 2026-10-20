@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAudit } from "@/lib/audit";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
 import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
 
@@ -58,5 +59,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: esError?.message || "Could not create the test" }, { status: 400 });
   }
 
+  await logAudit(auth.userId, "tests", `Created test "${name}" (${maxMarks} marks)`, { exam_id: exam.id, class_id, subject_id });
   return NextResponse.json({ success: true, id: examSubject.id });
 }
