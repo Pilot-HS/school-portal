@@ -11,6 +11,7 @@ import {
   BookOpen,
   CalendarOff,
   UserCircle,
+  ListChecks,
   MoreHorizontal,
   X,
 } from "lucide-react";
@@ -42,6 +43,7 @@ const TABS = [
   { href: "/teacher/tests", label: "Tests", icon: FileText },
   { href: "/teacher/students", label: "Students", icon: Users },
   { href: "/teacher/assignments", label: "Assignments", icon: BookOpen },
+  { href: "/teacher/mcq", label: "MCQ & OMR", icon: ListChecks },
   { href: "/teacher/leave", label: "Leave", icon: CalendarOff },
   { href: "/teacher/profile", label: "Profile", icon: UserCircle },
 ];

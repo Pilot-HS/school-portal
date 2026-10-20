@@ -698,3 +698,59 @@ a.t-test-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md);
 .import-drop:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201, 153, 46, 0.2); }
 .import-drop span { word-break: break-word; }
 .import-done { display: flex; align-items: center; gap: 14px; color: var(--success); }
+
+/* MCQ + OMR */
+.mcq-example { background: #f4f6f2; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 0.82rem; margin: 0 0 10px; white-space: pre-wrap; }
+.mcq-options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+.mcq-opt { font-size: 0.86rem; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fafbf8; }
+.mcq-opt.correct { background: #e4f0e8; border-color: #2f6b4f; color: var(--success); font-weight: 600; }
+@media (max-width: 600px) { .mcq-options { grid-template-columns: 1fr; } }
+.mcq-search { flex: 1; min-width: 140px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; font-family: inherit; }
+.mcq-num { width: 70px; padding: 9px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; font-family: inherit; text-align: center; }
+.mcq-pick { max-height: 340px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
+.mcq-pick-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 0.88rem; cursor: pointer; }
+.mcq-pick-row:last-child { border-bottom: none; }
+.mcq-pick-row.on { background: var(--accent-tint); }
+.mcq-pick-no { min-width: 22px; font-weight: 700; color: var(--accent-2); }
+.mcq-pick-row input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; }
+
+/* Printable paper */
+.paper { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 18px 20px; box-shadow: var(--shadow-sm); color: #000; }
+.paper-head { text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px; position: relative; }
+.paper-school { font-size: 1.15rem; font-weight: 700; }
+.paper-title { font-size: 1rem; margin-top: 2px; }
+.paper-meta { font-size: 0.8rem; margin-top: 4px; white-space: pre-wrap; }
+.paper-version { position: absolute; right: 0; top: 0; border: 1.5px solid #000; padding: 2px 8px; font-weight: 700; font-size: 0.8rem; }
+.paper-lines { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; margin: 12px 0; }
+.paper-ins { font-size: 0.82rem; margin: 0 0 12px; }
+.paper-questions { margin: 0; padding-left: 22px; }
+.pq { margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid; }
+.pq-text { font-weight: 600; font-size: 0.92rem; margin-bottom: 4px; }
+.pq-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; font-size: 0.86rem; }
+@media (max-width: 520px) { .pq-opts { grid-template-columns: 1fr; } }
+.key-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+.key-cell { display: flex; justify-content: space-between; border: 1px solid #000; padding: 5px 9px; font-size: 0.9rem; }
+.omr-sheet { background: #fff; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+
+/* OMR scanning */
+.scan-tips { margin: 0 0 12px; padding-left: 20px; font-size: 0.88rem; line-height: 1.7; }
+.import-drop.disabled { opacity: 0.55; cursor: not-allowed; }
+.scan-card { margin-bottom: 14px; }
+.scan-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; max-width: 360px; }
+.scan-score { margin-top: 12px; font-size: 0.9rem; }
+.scan-photo { width: 100%; max-width: 520px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px; display: block; }
+.scan-answers { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; margin-top: 8px; }
+.scan-answers label { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; }
+.scan-answers label span { width: 22px; text-align: right; color: var(--muted); }
+.scan-answers select { flex: 1; padding: 6px 4px; border: 1px solid var(--border); border-radius: 6px; font-size: 16px; }
+.scan-answers label.flag select { border-color: #c0453f; background: #fdf0ef; }
+
+/* Printing the paper, key or OMR sheet: show only the sheet */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff !important; }
+  .portal-main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+  .t-shell { padding-bottom: 0 !important; }
+  .print-sheet { border: none !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
+  .omr-sheet svg { width: 100% !important; max-height: 265mm !important; }
+}
