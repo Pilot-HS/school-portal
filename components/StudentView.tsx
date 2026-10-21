@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import TimetableGrid from "@/components/TimetableGrid";
 import ReportCard from "@/components/ReportCard";
+import AttendanceRegister from "@/components/AttendanceRegister";
 import { teacherApi } from "@/lib/teacherApi";
 import { Printer } from "lucide-react";
 import { localISODate, formatDate } from "@/lib/teacherUi";
@@ -33,7 +34,7 @@ const TABS: { key: TabKey; label: string }[] = [
 ];
 
 const pillFor = (status: string) =>
-  status === "present" ? "pill-green" : status === "leave" ? "pill-amber" : "pill-red";
+  status === "present" ? "pill-green" : status === "late" ? "pill-amber" : status === "leave" ? "pill-gray" : "pill-red";
 
 // Shows everything about one student. Used by both the student and the parent portal.
 export default function StudentView({
@@ -140,9 +141,10 @@ export default function StudentView({
 
   // Attendance
   const present = attendance.filter((a) => a.status === "present").length;
+  const lateCount = attendance.filter((a) => a.status === "late").length;
   const absent = attendance.filter((a) => a.status === "absent").length;
   const onLeave = attendance.filter((a) => a.status === "leave").length;
-  const attPct = attendance.length ? Math.round((present / attendance.length) * 100) : null;
+  const attPct = attendance.length ? Math.round(((present + lateCount) / attendance.length) * 100) : null;
 
   // Homework
   const upcoming = assignments.filter((a) => !a.due_date || a.due_date >= todayISO);
@@ -274,12 +276,13 @@ export default function StudentView({
 
       {tab === "attendance" && (
         <>
-          <div className="t-stats" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+          <div className="t-stats no-print" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
             <div className="t-stat"><div><div className="t-stat-num">{present}</div><div className="t-stat-label">Present</div></div></div>
+            <div className="t-stat"><div><div className="t-stat-num">{lateCount}</div><div className="t-stat-label">Late</div></div></div>
             <div className="t-stat"><div><div className="t-stat-num">{absent}</div><div className="t-stat-label">Absent</div></div></div>
             <div className="t-stat"><div><div className="t-stat-num">{onLeave}</div><div className="t-stat-label">On leave</div></div></div>
           </div>
-          <div className="portal-panel">
+          <div className="portal-panel no-print">
             <h2>Last 30 days</h2>
             {attendance.length === 0 ? (
               <div className="t-empty"><CalendarDays size={28} />No attendance records yet.</div>
@@ -299,6 +302,9 @@ export default function StudentView({
               </div>
             )}
           </div>
+
+          <h2 className="t-section-title no-print">Check any dates and print</h2>
+          <AttendanceRegister mode="student" studentId={student.id} />
         </>
       )}
 

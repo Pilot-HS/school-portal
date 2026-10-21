@@ -1,5 +1,5 @@
 -- ONE-TIME DATABASE SETUP for the school portal
--- (MCQ question bank, Substitute Cover and the Activity Log)
+-- (MCQ, Substitute Cover, Activity Log, Holidays, Settings, "Late" attendance)
 -- In Supabase: SQL Editor -> New query -> paste ALL of this -> press Run.
 -- Safe to run more than once.
 
@@ -52,8 +52,57 @@ create table if not exists public.audit_log (
 );
 create index if not exists audit_log_created_idx on public.audit_log (created_at desc);
 
+-- Holidays (whole school when class_id is empty, otherwise one class)
+create table if not exists public.school_holidays (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  holiday_date date not null,
+  reason text not null,
+  class_id text,
+  created_by text
+);
+create unique index if not exists school_holidays_unique on public.school_holidays (holiday_date, coalesce(class_id, 'all'));
+
+-- Small school-wide settings (attendance lock days, low-attendance limit)
+create table if not exists public.portal_settings (
+  key text primary key,
+  value text not null
+);
+
 -- Only the portal's server can read or change these tables.
 alter table public.mcq_questions enable row level security;
 alter table public.mcq_papers enable row level security;
 alter table public.teacher_cover enable row level security;
 alter table public.audit_log enable row level security;
+alter table public.school_holidays enable row level security;
+alter table public.portal_settings enable row level security;
+
+-- Allow the new "late" attendance status.
+-- (Removes an old rule that only allowed present/absent/leave, if there is one.)
+do $$
+declare
+  r record;
+  enum_name text;
+begin
+  for r in
+    select conname from pg_constraint
+    where conrelid = 'public.attendance'::regclass
+      and contype = 'c'
+      and pg_get_constraintdef(oid) ilike '%status%'
+  loop
+    execute format('alter table public.attendance drop constraint %I', r.conname);
+  end loop;
+
+  select ty.typname into enum_name
+  from pg_attribute a
+  join pg_class c on c.oid = a.attrelid
+  join pg_type ty on ty.oid = a.atttypid
+  where c.relname = 'attendance'
+    and c.relnamespace = 'public'::regnamespace
+    and a.attname = 'status'
+    and ty.typtype = 'e';
+
+  if enum_name is not null then
+    execute format('alter type public.%I add value if not exists %L', enum_name, 'late');
+  end if;
+end $$;

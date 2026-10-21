@@ -87,7 +87,7 @@ export default function AdminPage() {
       const head = { count: "exact" as const, head: true };
       const dayQueries = dateList.flatMap((d) => [
         supabase.from("attendance").select("id", head).eq("date", d),
-        supabase.from("attendance").select("id", head).eq("date", d).eq("status", "present"),
+        supabase.from("attendance").select("id", head).eq("date", d).in("status", ["present", "late"]),
       ]);
 
       const [studentsRes, teachersRes, paidRes, unpaidRes, leaveRes, noticeRes, ...dayRes] = await Promise.all([
@@ -217,7 +217,7 @@ export default function AdminPage() {
     pendingLeave > 0 && { href: "/admin/leave-requests", icon: CalendarOff, text: `${pendingLeave} leave ${pendingLeave === 1 ? "request" : "requests"} waiting for approval` },
     unpaidCount > 0 && { href: "/admin/fees", icon: Wallet, text: `${unpaidCount} unpaid fee ${unpaidCount === 1 ? "record" : "records"}` },
     now.getDay() !== 0 && (todayStat === undefined || todayStat.total === 0)
-      ? { href: "/teacher/attendance", icon: CalendarCheck, text: "No student attendance has been marked today" }
+      ? { href: "/admin/attendance", icon: CalendarCheck, text: "No student attendance has been marked today" }
       : false,
   ].filter(Boolean) as { href: string; icon: any; text: string }[];
 

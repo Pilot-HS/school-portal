@@ -44,18 +44,19 @@ export async function GET(request: Request) {
     }
   }
 
-  const tally: Record<string, { present: number; absent: number; leave: number }> = {};
+  const tally: Record<string, { present: number; late: number; absent: number; leave: number }> = {};
   rows.forEach((r) => {
-    if (!tally[r.student_id]) tally[r.student_id] = { present: 0, absent: 0, leave: 0 };
+    if (!tally[r.student_id]) tally[r.student_id] = { present: 0, late: 0, absent: 0, leave: 0 };
     if (r.status === "present") tally[r.student_id].present++;
+    else if (r.status === "late") tally[r.student_id].late++;
     else if (r.status === "absent") tally[r.student_id].absent++;
     else if (r.status === "leave") tally[r.student_id].leave++;
   });
 
   return NextResponse.json({
     students: active.map((s: any) => {
-      const t = tally[s.id] || { present: 0, absent: 0, leave: 0 };
-      const total = t.present + t.absent + t.leave;
+      const t = tally[s.id] || { present: 0, late: 0, absent: 0, leave: 0 };
+      const total = t.present + t.late + t.absent + t.leave;
       return {
         id: s.id,
         full_name: s.full_name,
@@ -64,7 +65,7 @@ export async function GET(request: Request) {
         house: s.house || null,
         ...t,
         total,
-        pct: total > 0 ? Math.round((t.present / total) * 100) : null,
+        pct: total > 0 ? Math.round(((t.present + t.late) / total) * 100) : null,
       };
     }),
   });

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin, requireRole } from "@/lib/roleAuth";
-import { canAccessClass, getAllowedClassIds, noAccessResponse } from "@/lib/teacherAccess";
+import { canAccessClass, noAccessResponse, todayInSchool } from "@/lib/teacherAccess";
+import { holidayOn } from "@/lib/holidays";
+import { getAttendanceSettings } from "@/lib/settings";
+import { isSunday } from "@/lib/attendanceStats";
 import { fetchAllRows } from "@/lib/fetchAll";
 
 // For one class: its students, what was already marked on a date,
@@ -54,11 +57,12 @@ export async function GET(request: Request) {
   }
 
   const records: Record<string, string> = {};
-  const byDate: Record<string, { present: number; absent: number; leave: number }> = {};
+  const byDate: Record<string, { present: number; late: number; absent: number; leave: number }> = {};
   rows.forEach((r) => {
     if (r.date === date) records[r.student_id] = r.status;
-    if (!byDate[r.date]) byDate[r.date] = { present: 0, absent: 0, leave: 0 };
+    if (!byDate[r.date]) byDate[r.date] = { present: 0, late: 0, absent: 0, leave: 0 };
     if (r.status === "present") byDate[r.date].present++;
+    else if (r.status === "late") byDate[r.date].late++;
     else if (r.status === "absent") byDate[r.date].absent++;
     else if (r.status === "leave") byDate[r.date].leave++;
   });
@@ -68,9 +72,15 @@ export async function GET(request: Request) {
     .slice(0, 14)
     .map((d) => ({ date: d, ...byDate[d] }));
 
+  const [{ lockDays }, holiday] = await Promise.all([getAttendanceSettings(), holidayOn(date, classId)]);
+
   return NextResponse.json({
     students: activeStudents.map((s: any) => ({ id: s.id, full_name: s.full_name, roll_no: s.roll_no })),
     records,
     history,
+    today: todayInSchool(),
+    lock_days: lockDays,
+    is_sunday: isSunday(date),
+    holiday,
   });
 }

@@ -55,7 +55,7 @@ const GROUPS: { title: string | null; items: NavItem[] }[] = [
   {
     title: "Academics",
     items: [
-      { key: "attendance", href: "/teacher/attendance", label: "Attendance", icon: ClipboardCheck },
+      { key: "attendance", href: "/admin/attendance", label: "Attendance", icon: ClipboardCheck },
       { key: "assignments", href: "/admin/assignments", label: "Assignments", icon: BookOpen },
       { key: "exams", href: "/admin/exams", label: "Exams & Results", icon: Award },
       { key: "timetable", href: "/admin/timetable", label: "Timetable", icon: CalendarClock },

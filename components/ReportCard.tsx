@@ -8,7 +8,7 @@ export type RcStudent = {
   house?: string | null;
   class_name: string;
   results: { exam_id?: string; exam_name: string; term?: string | null; subject: string; marks_obtained: number; total_marks: number }[];
-  attendance: { present: number; absent: number; leave: number };
+  attendance: { present: number; late?: number; absent: number; leave: number };
 };
 export type RcBand = { grade_label: string; min_percentage: number; max_percentage: number; remarks?: string | null };
 
@@ -79,8 +79,9 @@ export default function ReportCard({
   const overall = grandMax > 0 ? (grandGot / grandMax) * 100 : null;
 
   const att = student.attendance;
-  const attTotal = att.present + att.absent + att.leave;
-  const attPct = attTotal > 0 ? Math.round((att.present / attTotal) * 100) : null;
+  const attended = att.present + (att.late || 0);
+  const attTotal = attended + att.absent + att.leave;
+  const attPct = attTotal > 0 ? Math.round((attended / attTotal) * 100) : null;
   const finalRemark = (remark && remark.trim()) || autoRemark(overall, attPct);
 
   return (
@@ -144,7 +145,7 @@ export default function ReportCard({
       )}
 
       <div className="rc-att">
-        <strong>Attendance:</strong> {attTotal === 0 ? "No attendance recorded." : `${att.present} present, ${att.absent} absent, ${att.leave} on leave out of ${attTotal} days (${attPct}%)`}
+        <strong>Attendance:</strong> {attTotal === 0 ? "No attendance recorded." : `${attended} present${att.late ? ` (${att.late} late)` : ""}, ${att.absent} absent, ${att.leave} on leave out of ${attTotal} days (${attPct}%)`}
       </div>
 
       <div className="rc-remark">

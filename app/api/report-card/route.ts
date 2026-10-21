@@ -51,10 +51,11 @@ export async function GET(request: Request) {
 
   const resultsBy: Record<string, any[]> = {};
   results.forEach((r) => (resultsBy[r.student_id] = resultsBy[r.student_id] || []).push(r));
-  const attBy: Record<string, { present: number; absent: number; leave: number }> = {};
+  const attBy: Record<string, { present: number; late: number; absent: number; leave: number }> = {};
   attendance.forEach((a) => {
-    const t = (attBy[a.student_id] = attBy[a.student_id] || { present: 0, absent: 0, leave: 0 });
+    const t = (attBy[a.student_id] = attBy[a.student_id] || { present: 0, late: 0, absent: 0, leave: 0 });
     if (a.status === "present") t.present++;
+    else if (a.status === "late") t.late++;
     else if (a.status === "absent") t.absent++;
     else if (a.status === "leave") t.leave++;
   });
@@ -84,7 +85,7 @@ export async function GET(request: Request) {
       house: s.house,
       class_name: s.classes?.name || [s.classes?.grade, s.classes?.section].filter(Boolean).join("-") || "",
       results: resultsBy[s.id] || [],
-      attendance: attBy[s.id] || { present: 0, absent: 0, leave: 0 },
+      attendance: attBy[s.id] || { present: 0, late: 0, absent: 0, leave: 0 },
     })),
   });
 }
