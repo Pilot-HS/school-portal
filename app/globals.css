@@ -843,3 +843,6 @@ a.t-test-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md);
   .ar-sign { break-inside: avoid; }
   tr { break-inside: avoid; }
 }
+
+/* The school website doesn't show the portal's "early development" banner */
+body:has(.site) .demo-banner { display: none; }

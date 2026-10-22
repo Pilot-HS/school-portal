@@ -25,6 +25,7 @@ import {
   Medal,
   CalendarRange,
   MoreHorizontal,
+  Globe,
   Download,
   X,
 } from "lucide-react";
@@ -70,6 +71,13 @@ const GROUPS: { title: string | null; items: NavItem[] }[] = [
       { key: "accounts", href: "/admin/create-user", label: "Accounts", icon: UserPlus },
       { key: "bulk-logins", href: "/admin/bulk-logins", label: "Bulk Logins", icon: UserPlus, extra: true },
       { key: "report-cards", href: "/admin/report-cards", label: "Report Cards", icon: Award, extra: true },
+    ],
+  },
+  {
+    title: "Website",
+    items: [
+      { key: "website", href: "/admin/website", label: "Website", icon: Globe, extra: true },
+      { key: "website-editors", href: "/admin/website-editors", label: "Website Editors", icon: UserCheck, extra: true },
     ],
   },
   {

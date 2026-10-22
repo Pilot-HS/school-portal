@@ -1,5 +1,5 @@
 -- ONE-TIME DATABASE SETUP for the school portal
--- (MCQ, Substitute Cover, Activity Log, Holidays, Settings, "Late" attendance)
+-- (MCQ, Substitute Cover, Activity Log, Holidays, Settings, "Late" attendance, Editable website)
 -- In Supabase: SQL Editor -> New query -> paste ALL of this -> press Run.
 -- Safe to run more than once.
 
@@ -69,6 +69,67 @@ create table if not exists public.portal_settings (
   value text not null
 );
 
+-- ===== Editable school website =====
+create table if not exists public.site_pages (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  slug text not null,
+  parent_id uuid references public.site_pages(id) on delete cascade,
+  title text not null,
+  menu_label text,
+  position integer not null default 0,
+  show_in_menu boolean not null default true,
+  is_home boolean not null default false,
+  seo_description text,
+  draft jsonb not null default '[]'::jsonb,
+  published jsonb not null default '[]'::jsonb,
+  has_unpublished boolean not null default false,
+  published_at timestamptz,
+  updated_by text
+);
+create unique index if not exists site_pages_slug_unique on public.site_pages (coalesce(parent_id::text, 'root'), slug);
+
+create table if not exists public.site_versions (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  page_id uuid not null references public.site_pages(id) on delete cascade,
+  created_by text,
+  content jsonb not null,
+  note text
+);
+create index if not exists site_versions_page_idx on public.site_versions (page_id, created_at desc);
+
+create table if not exists public.site_settings (
+  key text primary key,
+  draft jsonb,
+  published jsonb,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.site_media (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  path text not null,
+  url text not null,
+  alt text,
+  size integer,
+  uploaded_by text
+);
+
+-- People allowed to edit the website besides the admins (teachers, students, parents)
+create table if not exists public.site_editors (
+  user_id text primary key,
+  created_at timestamptz not null default now(),
+  can_publish boolean not null default false,
+  expires_at timestamptz,
+  granted_by text,
+  note text
+);
+
+-- A public place for the website's pictures
+insert into storage.buckets (id, name, public) values ('site-media', 'site-media', true) on conflict (id) do nothing;
+
 -- Only the portal's server can read or change these tables.
 alter table public.mcq_questions enable row level security;
 alter table public.mcq_papers enable row level security;
@@ -76,6 +137,11 @@ alter table public.teacher_cover enable row level security;
 alter table public.audit_log enable row level security;
 alter table public.school_holidays enable row level security;
 alter table public.portal_settings enable row level security;
+alter table public.site_pages enable row level security;
+alter table public.site_versions enable row level security;
+alter table public.site_settings enable row level security;
+alter table public.site_media enable row level security;
+alter table public.site_editors enable row level security;
 
 -- Allow the new "late" attendance status.
 -- (Removes an old rule that only allowed present/absent/leave, if there is one.)
