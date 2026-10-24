@@ -6,7 +6,7 @@ import EditBar from "./EditBar";
 
 const FONTS = "https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap";
 
-export default function SiteShell({ settings, menu, activeHref, children }: { settings: SiteSettings; menu: MenuItem[]; activeHref: string; children: React.ReactNode }) {
+export default function SiteShell({ settings, menu, activeHref, pageId, pageTitle, children }: { settings: SiteSettings; menu: MenuItem[]; activeHref: string; pageId?: string; pageTitle?: string; children: React.ReactNode }) {
   const g = settings.general;
   const f = settings.footer;
   const mark = (g.brand_mark || g.school_name || "G").trim().charAt(0).toUpperCase();
@@ -58,7 +58,8 @@ export default function SiteShell({ settings, menu, activeHref, children }: { se
         </div>
       </header>
 
-      {children}
+      <div className="site-page-content">{children}</div>
+      <div id="site-editor-root"></div>
 
       <footer className="site-footer">
         <div className="container">
@@ -90,7 +91,7 @@ export default function SiteShell({ settings, menu, activeHref, children }: { se
       </footer>
 
       <SiteBehaviors />
-      <EditBar />
+      <EditBar pageId={pageId} pageTitle={pageTitle} />
     </div>
   );
 }

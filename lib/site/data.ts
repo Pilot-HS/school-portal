@@ -1,19 +1,6 @@
 import { supabaseAdmin } from "@/lib/roleAuth";
 import type { MenuItem, PageRow, Section, SiteSettings } from "./types";
-
-export const DEFAULT_SETTINGS: SiteSettings = {
-  general: {
-    school_name: "Government Boys High School, P.H. Pilot, Dadu",
-    tagline: "Learning Today, Leading Tomorrow",
-    phone: "",
-    email: "",
-    address_short: "",
-    apply_label: "Apply Now",
-    apply_href: "/admissions",
-    show_portal_link: true,
-  },
-  footer: { about: "", social: [], columns: [], legal: [], copyright: "" },
-};
+import { DEFAULT_SETTINGS } from "./defaults";
 
 export type SiteState = {
   ready: boolean;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, Globe } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -41,6 +41,7 @@ export default function PortalNav({
           <div className="nav-avatar" aria-hidden="true">{initial}</div>
           <span className="nav-name">{fullName}</span>
         </div>
+        <a href="/" className="btn btn-logout" aria-label="View the school website"><Globe size={15} /> <span>Website</span></a>
         <button className="btn btn-logout" onClick={handleLogout} aria-label="Log out">
           <LogOut size={15} /> <span>Log out</span>
         </button>

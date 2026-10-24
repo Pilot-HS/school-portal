@@ -207,5 +207,5 @@ export function SectionView({ section: s }: { section: Section }) {
 }
 
 export function SectionList({ sections }: { sections: Section[] }) {
-  return <>{sections.map((s) => <SectionView key={s.id} section={s} />)}</>;
+  return <>{sections.filter((s) => !s.hidden).map((s) => <SectionView key={s.id} section={s} />)}</>;
 }

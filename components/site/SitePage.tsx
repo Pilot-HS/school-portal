@@ -29,7 +29,7 @@ export async function renderSitePage(parts: string[]) {
   if (!page) notFound();
   const sections = await loadPublishedSections(page.id);
   return (
-    <SiteShell settings={state.settings} menu={state.menu} activeHref={pageHref(page, state.pages)}>
+    <SiteShell settings={state.settings} menu={state.menu} activeHref={pageHref(page, state.pages)} pageId={page.id} pageTitle={page.title}>
       <SectionList sections={sections} />
     </SiteShell>
   );

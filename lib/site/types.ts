@@ -3,7 +3,7 @@
 export type Btn = { label: string; href: string; style?: "primary" | "outline" | "ghost" };
 export type Img = { src: string; alt: string; style?: string };
 
-type Base = { id: string };
+type Base = { id: string; hidden?: boolean };
 export type Section =
   | (Base & { type: "banner"; kicker?: string; title: string; subtitle?: string })
   | (Base & { type: "hero"; eyebrow?: string; title: string; lead?: string; buttons: Btn[] })
