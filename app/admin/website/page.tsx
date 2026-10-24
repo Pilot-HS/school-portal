@@ -117,13 +117,13 @@ export default function AdminWebsitePage() {
                       <td style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{href(p)}</td>
                       <td>{p.show_in_menu ? "Yes" : "Hidden"}</td>
                       <td><span className={`pill ${p.has_unpublished ? "pill-amber" : "pill-green"}`}>{p.has_unpublished ? "Unpublished changes" : "Published"}</span></td>
-                      <td><a className="auth-link" href={href(p)} target="_blank" rel="noopener noreferrer">View</a></td>
+                      <td style={{ whiteSpace: "nowrap" }}><a className="auth-link" href={`${href(p)}?edit=1`}>Edit</a> &nbsp; <a className="auth-link" href={href(p)} target="_blank" rel="noopener noreferrer">View</a></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <p className="t-hint">Editing text, pictures, sections and pages directly on the website comes in the next update.</p>
+            <p className="t-hint">Press <strong>Edit</strong> to change a page directly on the website. You can also open any page while logged in and press <strong>Edit this page</strong> in the dark bar at the bottom.</p>
           </div>
         </>
       )}
