@@ -13,7 +13,7 @@ export function styleObj(style?: string | null): CSSProperties | undefined {
     const key = prop.startsWith("--") ? prop : prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
     out[key] = val;
   });
-  return out as CSSProperties;
+  return out as unknown as CSSProperties;
 }
 
 export const slugify = (s: string) =>

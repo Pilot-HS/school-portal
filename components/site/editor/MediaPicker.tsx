@@ -17,7 +17,7 @@ async function shrink(file: File, max = 1600): Promise<File> {
     c.height = Math.round(bmp.height * f);
     c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
     const type = file.type === "image/png" && file.size < 500_000 ? "image/png" : "image/jpeg";
-    const blob: Blob | null = await new Promise((res) => c.toBlob(res, type, 0.85));
+    const blob = await new Promise<Blob | null>((res) => c.toBlob((b) => res(b), type, 0.85));
     if (!blob) return file;
     return new File([blob], `photo.${type === "image/png" ? "png" : "jpg"}`, { type });
   } catch {
