@@ -19,5 +19,5 @@ export function styleObj(style?: string | null): CSSProperties | undefined {
 export const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
 
-// These words are used by the portal itself, so a website page can't take them.
+// These  words are used by the portal itself, so a website page can't take them.
 export const RESERVED_SLUGS = ["login", "admin", "teacher", "student", "parent", "api", "forgot-password", "reset-password", "_next", "favicon.ico"];
