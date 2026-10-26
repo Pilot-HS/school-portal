@@ -33,7 +33,7 @@ export async function PUT(request: Request) {
   if (!id) return NextResponse.json({ error: "Page id is required." }, { status: 400 });
 
   const clean = cleanSections(body.sections);
-  if (!clean.ok) return NextResponse.json({ error: clean.error }, { status: 400 });
+  if (clean.error) return NextResponse.json({ error: clean.error }, { status: 400 });
 
   const { data: page } = await supabaseAdmin.from("site_pages").select("id, title, seo_description, published, updated_at").eq("id", id).maybeSingle();
   if (!page) return NextResponse.json({ error: "Page not found." }, { status: 404 });

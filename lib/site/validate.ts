@@ -39,13 +39,17 @@ function walk(value: any, key: string, depth: number): any {
   return null;
 }
 
-export function cleanSections(input: unknown): { ok: true; sections: any[] } | { ok: false; error: string } {
-  if (!Array.isArray(input)) return { ok: false, error: "The page content isn't in the right shape." };
-  if (input.length > MAX_SECTIONS) return { ok: false, error: `A page can have at most ${MAX_SECTIONS} sections.` };
+export type CleanResult = { sections: any[]; error: string };
+
+// Returns { sections, error }. If error is not empty, the page must not be saved.
+export function cleanSections(input: unknown): CleanResult {
+  const fail = (error: string): CleanResult => ({ sections: [], error });
+  if (!Array.isArray(input)) return fail("The page content isn't in the right shape.");
+  if (input.length > MAX_SECTIONS) return fail(`A page can have at most ${MAX_SECTIONS} sections.`);
   const seen = new Set<string>();
   const out: any[] = [];
   for (const raw of input) {
-    if (!raw || typeof raw !== "object" || !SECTION_TYPES.includes(raw.type)) return { ok: false, error: "One of the sections has an unknown type." };
+    if (!raw || typeof raw !== "object" || !SECTION_TYPES.includes(raw.type)) return fail("One of the sections has an unknown type.");
     const cleaned = walk(raw, "", 0);
     let id = String(cleaned.id || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 24);
     if (!id || seen.has(id)) id = Math.random().toString(36).slice(2, 12);
@@ -54,8 +58,8 @@ export function cleanSections(input: unknown): { ok: true; sections: any[] } | {
     cleaned.hidden = raw.hidden === true;
     out.push(cleaned);
   }
-  if (JSON.stringify(out).length > 900000) return { ok: false, error: "This page is too large to save." };
-  return { ok: true, sections: out };
+  if (JSON.stringify(out).length > 900000) return fail("This page is too large to save.");
+  return { sections: out, error: "" };
 }
 
 const str = (v: unknown, max: number) => String(v ?? "").replace(/<[^>]*>/g, "").trim().slice(0, max);
