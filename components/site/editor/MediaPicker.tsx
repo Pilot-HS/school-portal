@@ -94,5 +94,5 @@ export default function MediaPicker({ current, onDone }: { current: { src: strin
       {current.src && alt !== current.alt && <div className="ed-actions"><button type="button" onClick={() => onDone({ src: current.src, alt })}>Keep the picture, only change the description</button></div>}
       {error && <p className="ed-error">{error}</p>}
     </ModalShell>
-  );
+   );
 }
