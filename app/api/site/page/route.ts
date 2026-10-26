@@ -55,4 +55,4 @@ export async function PUT(request: Request) {
   const { data: saved, error } = await supabaseAdmin.from("site_pages").update(patch).eq("id", id).select("updated_at, has_unpublished").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ success: true, updated_at: saved.updated_at, has_unpublished: saved.has_unpublished });
-}
+ }
