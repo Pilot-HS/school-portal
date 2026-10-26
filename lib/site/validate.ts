@@ -88,5 +88,5 @@ export function cleanSettings(general: any, footer: any) {
       legal: links(f.legal, 8),
       copyright: str(f.copyright, 200),
     },
-  };
+   };
 }
