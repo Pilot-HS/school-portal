@@ -85,6 +85,7 @@ const GROUPS: { title: string | null; items: NavItem[] }[] = [
     items: [
       { key: "activity", href: "/admin/activity", label: "Activity Log", icon: ClipboardCheck, extra: true },
       { key: "backup", href: "/admin/backup", label: "Backup & Export", icon: Download, extra: true },
+      { key: "setup", href: "/admin/setup", label: "Setup & Cleanup", icon: ClipboardCheck, extra: true },
       { key: "cover", href: "/admin/cover", label: "Substitute Cover", icon: UserCheck, extra: true },
       { key: "leave", href: "/admin/leave-requests", label: "Leave Requests", icon: CalendarOff, extra: true },
       { key: "staff-attendance", href: "/admin/staff-attendance", label: "Staff Attendance", icon: Clock, extra: true },
