@@ -27,6 +27,18 @@ export async function renderSitePage(parts: string[]) {
   if (!state.ready) return <NotReady reason={state.reason} />;
   const page = resolvePage(state.pages, parts);
   if (!page) notFound();
+  if (!page.published_at) {
+    return (
+      <SiteShell settings={state.settings} menu={state.menu} activeHref={pageHref(page, state.pages)} pageId={page.id} pageTitle={page.title}>
+        <section>
+          <div className="container" style={{ textAlign: "center", padding: "80px 0" }}>
+            <h1>{page.title}</h1>
+            <p>This page isn&apos;t published yet. Please check back soon.</p>
+          </div>
+        </section>
+      </SiteShell>
+    );
+  }
   const sections = await loadPublishedSections(page.id);
   return (
     <SiteShell settings={state.settings} menu={state.menu} activeHref={pageHref(page, state.pages)} pageId={page.id} pageTitle={page.title}>
@@ -44,5 +56,6 @@ export async function siteMetadata(parts: string[]): Promise<Metadata> {
   return {
     title: page.is_home ? `Home | ${school}` : `${page.title} | ${school}`,
     description: page.seo_description || undefined,
+    robots: page.published_at ? undefined : { index: false, follow: false },
   };
 }

@@ -9,7 +9,7 @@ import EditableSections from "./EditableSections";
 import { SectionList } from "../Sections";
 import MediaPicker from "./MediaPicker";
 import { EdCtx, Picked } from "./EditableBits";
-import { HistoryModal, PageSettingsModal, SiteSettingsModal } from "./Modals";
+import { HistoryModal, PageSettingsModal, PagesModal, SiteSettingsModal } from "./Modals";
 
 type Status = "saved" | "saving" | "unsaved" | "error" | "conflict";
 
@@ -24,7 +24,7 @@ export default function SiteEditor({ pageId, onExit }: { pageId: string; onExit:
   const [status, setStatus] = useState<Status>("saved");
   const [message, setMessage] = useState("");
   const [preview, setPreview] = useState(false);
-  const [modal, setModal] = useState<null | "history" | "page" | "site">(null);
+  const [modal, setModal] = useState<null | "history" | "page" | "site" | "pages">(null);
   const [general, setGeneral] = useState<SiteGeneral>(DEFAULT_SETTINGS.general);
   const [footer, setFooter] = useState<SiteFooter>(DEFAULT_SETTINGS.footer);
   const [picker, setPicker] = useState<{ cur: Picked; resolve: (r: Picked | null) => void } | null>(null);
@@ -161,6 +161,7 @@ export default function SiteEditor({ pageId, onExit }: { pageId: string; onExit:
           <div className="ed-tb-right">
             <button type="button" onClick={() => setPreview((v) => !v)}>{preview ? "Back to editing" : "Preview"}</button>
             <button type="button" onClick={() => setModal("page")}>Page settings</button>
+            {canPublish && <button type="button" onClick={() => setModal("pages")}>Pages &amp; menu</button>}
             {canPublish && <button type="button" onClick={() => setModal("site")}>School details &amp; footer</button>}
             <button type="button" onClick={() => setModal("history")}>History</button>
             {canPublish ? (
@@ -190,6 +191,7 @@ export default function SiteEditor({ pageId, onExit }: { pageId: string; onExit:
 
         {picker && <MediaPicker current={picker.cur} onDone={(r) => { picker.resolve(r); setPicker(null); }} />}
         {modal === "page" && <PageSettingsModal title={title} seo={seo} onClose={() => setModal(null)} onSave={(t, s) => { setTitle(t); setSeo(s); touch(); }} />}
+        {modal === "pages" && <PagesModal onClose={() => setModal(null)} />}
         {modal === "site" && <SiteSettingsModal general={general} footer={footer} onClose={() => setModal(null)} onSaved={() => window.location.reload()} />}
         {modal === "history" && (
           <HistoryModal

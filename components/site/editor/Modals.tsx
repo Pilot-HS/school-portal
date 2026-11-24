@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { TEMPLATES } from "@/lib/site/templates";
 import { siteApi } from "@/lib/site/client";
 import type { SiteFooter, SiteGeneral } from "@/lib/site/types";
+import PagesManager from "../PagesManager";
 
 function Shell({ title, onClose, children, wide }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
   return (
@@ -170,3 +171,14 @@ export function SiteSettingsModal({ general, footer, onClose, onSaved }: { gener
 }
 
 export { Shell as ModalShell };
+
+
+export function PagesModal({ onClose }: { onClose: () => void }) {
+  const [changed, setChanged] = useState(false);
+  const close = () => (changed ? window.location.reload() : onClose());
+  return (
+    <Shell title="Pages and menu" onClose={close} wide>
+      <PagesManager onChanged={() => setChanged(true)} />
+    </Shell>
+  );
+}

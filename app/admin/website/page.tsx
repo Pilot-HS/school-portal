@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ExternalLink, Globe, UserCheck } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import AdminLayout from "@/components/AdminLayout";
+import PagesManager from "@/components/site/PagesManager";
 
 async function api(method = "GET") {
   const { data } = await supabase.auth.getSession();
@@ -106,24 +107,9 @@ export default function AdminWebsitePage() {
           </div>
 
           <div className="portal-panel">
-            <h2>Pages ({pages.length})</h2>
-            <div style={{ overflowX: "auto" }}>
-              <table className="data-table">
-                <thead><tr><th>Page</th><th>Address</th><th>In menu</th><th>Status</th><th></th></tr></thead>
-                <tbody>
-                  {pages.map((p) => (
-                    <tr key={p.id}>
-                      <td><strong>{p.title}</strong></td>
-                      <td style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{href(p)}</td>
-                      <td>{p.show_in_menu ? "Yes" : "Hidden"}</td>
-                      <td><span className={`pill ${p.has_unpublished ? "pill-amber" : "pill-green"}`}>{p.has_unpublished ? "Unpublished changes" : "Published"}</span></td>
-                      <td style={{ whiteSpace: "nowrap" }}><a className="auth-link" href={`${href(p)}?edit=1`}>Edit</a> &nbsp; <a className="auth-link" href={href(p)} target="_blank" rel="noopener noreferrer">View</a></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="t-hint">Press <strong>Edit</strong> to change a page directly on the website. You can also open any page while logged in and press <strong>Edit this page</strong> in the dark bar at the bottom.</p>
+            <h2>Pages and menu ({pages.length})</h2>
+            <p className="t-hint" style={{ marginTop: 0 }}>Add pages, put a page under another one as a sub-tab (a drop-down in the menu), reorder, hide, rename or delete. New pages stay hidden from visitors until you open them, edit them and press <strong>Publish</strong>.</p>
+            <PagesManager onChanged={load} />
           </div>
         </>
       )}
