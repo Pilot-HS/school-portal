@@ -24,7 +24,7 @@ export async function loadSiteState(): Promise<SiteState> {
     const [pagesRes, settingsRes] = await Promise.all([
       supabaseAdmin
         .from("site_pages")
-        .select("id, slug, parent_id, title, menu_label, position, show_in_menu, is_home, seo_description")
+        .select("id, slug, parent_id, title, menu_label, position, show_in_menu, is_home, seo_description, published_at")
         .order("position", { ascending: true }),
       supabaseAdmin.from("site_settings").select("key, published"),
     ]);
@@ -38,13 +38,15 @@ export async function loadSiteState(): Promise<SiteState> {
       if (r.key === "footer" && r.published) settings.footer = { ...settings.footer, ...r.published };
     });
 
+    // Only pages that have been published appear in the menu. Others can still be opened (and edited) by direct address.
+    const live = pages.filter((p) => !!p.published_at);
     const toItem = (p: PageRow): MenuItem => ({
       id: p.id,
       label: p.menu_label || p.title,
       href: pageHref(p, pages),
-      children: pages.filter((c) => c.parent_id === p.id && c.show_in_menu).map(toItem),
+      children: live.filter((c) => c.parent_id === p.id && c.show_in_menu).map(toItem),
     });
-    const menu = pages.filter((p) => !p.parent_id && p.show_in_menu).map(toItem);
+    const menu = live.filter((p) => !p.parent_id && p.show_in_menu).map(toItem);
     return { ready: true, settings, pages, menu };
   } catch {
     return { ...empty, reason: "tables" };

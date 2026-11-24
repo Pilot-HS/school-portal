@@ -846,3 +846,34 @@ a.t-test-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md);
 
 /* The school website doesn't show the portal's "early development" banner */
 body:has(.site) .demo-banner { display: none; }
+
+/* ---- Pages & menu manager (admin Website page and the editor) ---- */
+.pm { font-size: 0.9rem; color: var(--ink, #163a2b); }
+.pm-list { border: 1px solid var(--border, #dbe1da); border-radius: 10px; background: #fff; overflow: hidden; }
+.pm-item { border-bottom: 1px solid var(--border, #dbe1da); }
+.pm-item:last-child { border-bottom: none; }
+.pm-item.child { background: #fafbf8; padding-left: 26px; border-left: 3px solid var(--accent, #c9992e); }
+.pm-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; }
+.pm-main { min-width: 180px; flex: 1; }
+.pm-badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 0.7rem; background: #e9ece7; color: #46564d; }
+.pm-badge.green { background: #e4f0e8; color: #2f6b4f; }
+.pm-badge.amber { background: #fff1cc; color: #7a5a00; }
+.pm-badge.gray { background: #eceeea; }
+.pm-url { font-family: monospace; font-size: 0.75rem; color: #6b7a71; margin-top: 2px; }
+.pm-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.pm-btn, .pm-primary { font: inherit; font-size: 0.8rem; padding: 5px 11px; border-radius: 8px; border: 1px solid var(--border, #dbe1da); background: #fff; color: inherit; cursor: pointer; text-decoration: none; display: inline-block; }
+.pm-btn:disabled, .pm-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.pm-btn.danger { color: #b3261e; border-color: #e3b4b0; }
+.pm-primary { background: #163a2b; color: #fff; border-color: #163a2b; font-weight: 700; padding: 8px 16px; }
+.pm-panel { background: #f5f6f2; border: 1px solid var(--border, #dbe1da); border-radius: 10px; padding: 12px 14px; margin: 0 10px 10px; }
+.pm-item.child .pm-panel { margin-left: 0; }
+.pm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px 14px; margin: 10px 0; }
+.pm-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; font-weight: 600; }
+.pm-grid input, .pm-grid select { font: inherit; font-weight: 400; padding: 8px 9px; border: 1px solid var(--border, #dbe1da); border-radius: 8px; background: #fff; }
+.pm-check { display: flex; gap: 8px; align-items: center; font-size: 0.85rem; margin: 6px 0; }
+.pm-hint { font-size: 0.78rem; color: #6b7a71; margin: 6px 0; }
+.pm-actions-row { display: flex; gap: 8px; margin-top: 8px; }
+.pm-sub-add { padding: 4px 12px 8px 38px; }
+.pm-link { background: none; border: none; color: #8a6a1a; font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; padding: 0; text-decoration: underline; }
+.pm-error { color: #b3261e; background: #fbe7e7; border: 1px solid #f0c4c4; padding: 8px 12px; border-radius: 8px; }
+.pm-ok { color: #1f5a3f; background: #e4f0e8; padding: 8px 12px; border-radius: 8px; }

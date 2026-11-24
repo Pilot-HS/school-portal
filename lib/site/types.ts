@@ -49,6 +49,7 @@ export type PageRow = {
   show_in_menu: boolean;
   is_home: boolean;
   seo_description: string | null;
+  published_at?: string | null;
 };
 
 export type MenuItem = { id: string; label: string; href: string; children: MenuItem[] };
